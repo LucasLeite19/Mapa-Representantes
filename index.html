@@ -294,44 +294,44 @@
       <!-- Coluna da Direita: Mapa e Controles Separados em 2 Grupos Claros -->
       <div class="lg:col-span-8 flex flex-col space-y-3">
         
-        <!-- Barra de Ferramentas Superior do Mapa com 2 Grupos Distintos -->
-        <div class="flex flex-wrap items-center justify-between gap-2.5">
+        <!-- Barra de Ferramentas Superior do Mapa com 2 Grupos Distintos (Totalmente Responsiva) -->
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2">
           
           <!-- SUBDIVISÃO 1: Camadas do Mapa de Fundo -->
-          <div class="flex items-center space-x-1.5 bg-white p-1 rounded-xl border border-gray-300 shadow-xs text-xs">
-            <span class="text-gray-600 font-bold px-2 py-1">Camada:</span>
-            <button data-layer="esri" class="btn-tile-layer btn-tile-active px-2.5 py-1 rounded-lg font-bold transition-all">
+          <div class="flex items-center space-x-1 sm:space-x-1.5 bg-white p-1 rounded-xl border border-gray-300 shadow-xs text-xs overflow-x-auto max-w-full">
+            <span class="text-gray-600 font-bold px-1.5 sm:px-2 py-1 flex-shrink-0">Camada:</span>
+            <button data-layer="esri" class="btn-tile-layer btn-tile-active px-2 sm:px-2.5 py-1 rounded-lg font-bold transition-all flex-shrink-0">
               Satélite
             </button>
-            <button data-layer="osm" class="btn-tile-layer btn-tile-inactive px-2.5 py-1 rounded-lg font-bold transition-all">
+            <button data-layer="osm" class="btn-tile-layer btn-tile-inactive px-2 sm:px-2.5 py-1 rounded-lg font-bold transition-all flex-shrink-0">
               OpenStreetMap
             </button>
-            <button data-layer="google" class="btn-tile-layer btn-tile-inactive px-2.5 py-1 rounded-lg font-bold transition-all">
+            <button data-layer="google" class="btn-tile-layer btn-tile-inactive px-2 sm:px-2.5 py-1 rounded-lg font-bold transition-all flex-shrink-0">
               Google Maps
             </button>
-            <button data-layer="carto" class="btn-tile-layer btn-tile-inactive px-2.5 py-1 rounded-lg font-bold transition-all">
+            <button data-layer="carto" class="btn-tile-layer btn-tile-inactive px-2 sm:px-2.5 py-1 rounded-lg font-bold transition-all flex-shrink-0">
               CartoDB Light
             </button>
           </div>
 
           <!-- SUBDIVISÃO 2: Ajustes de Exibição & Tela Cheia (Separado e Independente) -->
-          <div class="flex items-center space-x-2 bg-white p-1 rounded-xl border border-gray-300 shadow-xs text-xs">
-            <span class="text-gray-600 font-bold px-2 py-1">Ajustes:</span>
+          <div class="flex items-center space-x-1.5 sm:space-x-2 bg-white p-1 rounded-xl border border-gray-300 shadow-xs text-xs overflow-x-auto max-w-full">
+            <span class="text-gray-600 font-bold px-1.5 sm:px-2 py-1 flex-shrink-0">Ajustes:</span>
             
             <!-- Checkbox de Divisões Municipais -->
-            <label class="flex items-center space-x-1.5 cursor-pointer font-bold text-black bg-gray-100 hover:bg-gray-200 px-2.5 py-1 rounded-lg transition-colors">
+            <label class="flex items-center space-x-1.5 cursor-pointer font-bold text-black bg-gray-100 hover:bg-gray-200 px-2 sm:px-2.5 py-1 rounded-lg transition-colors flex-shrink-0">
               <input id="checkDivisoesCidades" type="checkbox" checked class="h-3.5 w-3.5 text-purple-600 rounded border-gray-300 focus:ring-purple-600" />
-              <span>Divisões Municipais</span>
+              <span>Divisões</span>
             </label>
 
             <!-- Checkbox de Rótulos no Mapa -->
-            <label class="flex items-center space-x-1.5 cursor-pointer font-bold text-black bg-gray-100 hover:bg-gray-200 px-2.5 py-1 rounded-lg transition-colors" title="Exibir ou ocultar os rótulos de município e representante sobre as cidades">
+            <label class="flex items-center space-x-1.5 cursor-pointer font-bold text-black bg-gray-100 hover:bg-gray-200 px-2 sm:px-2.5 py-1 rounded-lg transition-colors flex-shrink-0" title="Exibir ou ocultar os rótulos de município e representante sobre as cidades">
               <input id="checkRotulosMapa" type="checkbox" checked class="h-3.5 w-3.5 text-purple-600 rounded border-gray-300 focus:ring-purple-600" />
               <span>Rótulos</span>
             </label>
 
             <!-- Botão Enquadrar Estado -->
-            <button id="btnResetZoom" title="Reenquadrar visão do Estado" class="px-2.5 py-1 text-black font-bold hover:bg-gray-100 rounded-lg transition-colors flex items-center gap-1 border border-gray-200">
+            <button id="btnResetZoom" title="Reenquadrar visão do Estado" class="px-2 sm:px-2.5 py-1 text-black font-bold hover:bg-gray-100 rounded-lg transition-colors flex items-center gap-1 border border-gray-200 flex-shrink-0">
               <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
               </svg>
@@ -339,7 +339,7 @@
             </button>
 
             <!-- Botão Tela Cheia -->
-            <button id="btnFullScreen" title="Alternar Tela Cheia" class="px-2.5 py-1 text-black font-bold hover:bg-gray-100 rounded-lg transition-colors flex items-center gap-1 border border-gray-200">
+            <button id="btnFullScreen" title="Alternar Tela Cheia" class="px-2 sm:px-2.5 py-1 text-black font-bold hover:bg-gray-100 rounded-lg transition-colors flex items-center gap-1 border border-gray-200 flex-shrink-0">
               <svg id="iconExpand" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
               </svg>
@@ -651,6 +651,57 @@
       <div class="pt-2 flex justify-end">
         <button onclick="document.getElementById('modalAjuda').classList.add('hidden')" class="btn-purple-primary font-bold px-4 py-2 rounded-lg text-xs transition-colors">
           Fechar Guia
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Alterar Cor do Representante (Design Tranquilo e Seguro) -->
+  <div id="modalAlterarCor" class="fixed inset-0 bg-gray-900 bg-opacity-60 backdrop-filter blur-xs z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-2xl max-w-md w-full p-5 sm:p-6 shadow-2xl border border-gray-200 space-y-4">
+      <div class="flex items-center justify-between border-b border-gray-100 pb-3">
+        <div class="flex items-center gap-3">
+          <div id="modalCorPreviewBadge" class="w-9 h-9 rounded-xl shadow-xs border border-gray-300 flex items-center justify-center flex-shrink-0" style="background-color: #7c3aed;"></div>
+          <div>
+            <h3 class="text-sm sm:text-base font-black text-black">Alterar Cor do Representante</h3>
+            <p id="modalCorNomeRep" class="text-xs font-bold text-purple-700 truncate max-w-[220px]">Representante</p>
+          </div>
+        </div>
+        <button id="btnFecharModalCor" class="text-gray-400 hover:text-black text-2xl font-bold leading-none p-1">&times;</button>
+      </div>
+
+      <!-- Paleta de Cores Recomendadas (Toque Fácil) -->
+      <div>
+        <label class="block text-xs font-black text-black mb-1.5">Paleta Rápida (1 Toque):</label>
+        <div id="modalCorPaletaPredefinida" class="grid grid-cols-6 gap-2">
+          <!-- Gerado via JS com 12 cores vibrantes corporativas -->
+        </div>
+      </div>
+
+      <!-- Seletor Livre e Código Hexadecimal -->
+      <div>
+        <label class="block text-xs font-black text-black mb-1.5">Ou personalize com a cor exata:</label>
+        <div class="flex items-center space-x-2.5">
+          <input id="inputModalCor" type="color" value="#7C3AED" class="w-12 h-10 rounded-lg border border-gray-300 cursor-pointer p-0.5 bg-white shadow-xs" />
+          <input id="inputModalCorHex" type="text" value="#7C3AED" maxlength="7" class="flex-1 text-xs font-mono uppercase bg-white border border-gray-300 rounded-lg px-3 py-2 text-center text-black font-black focus:outline-none focus:ring-2 focus:ring-purple-600" />
+          <button id="btnModalCorAleatoria" type="button" title="Gerar cor aleatória" class="p-2 text-black hover:text-purple-700 hover:bg-purple-50 border border-gray-300 rounded-lg transition-colors">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Ações -->
+      <div class="pt-3 flex items-center justify-end gap-2 border-t border-gray-100">
+        <button id="btnCancelarModalCor" type="button" class="px-4 py-2 rounded-lg text-xs font-bold text-gray-700 hover:bg-gray-100 border border-gray-300 transition-colors">
+          Cancelar
+        </button>
+        <button id="btnSalvarModalCor" type="button" class="btn-purple-primary font-bold px-5 py-2 rounded-lg text-xs flex items-center gap-1.5 shadow-sm">
+          <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+          </svg>
+          <span>Salvar Nova Cor</span>
         </button>
       </div>
     </div>

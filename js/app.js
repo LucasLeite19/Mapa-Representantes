@@ -270,25 +270,62 @@ const App = (() => {
         if (wrapper && wrapper.classList.contains('map-fullscreen')) {
           MapManager.toggleFullScreen();
         }
-        document.querySelectorAll('#modalSugestoes, #modalAjuda, #modalMarcas').forEach(m => m.classList.add('hidden'));
+        document.querySelectorAll('#modalSugestoes, #modalAjuda, #modalMarcas, #modalAlterarCor').forEach(m => m.classList.add('hidden'));
       }
     });
 
     // Busca Rápida na Tabela
     document.getElementById('inputBuscaTabela').addEventListener('input', renderTabela);
 
-    // Alteração dinâmica de cor do representante (no Mapa e na Tabela)
-    const handleRepColorChange = (e) => {
-      if (e.target && (e.target.classList.contains('input-change-rep-color') || e.target.classList.contains('input-tabela-cor'))) {
-        const repName = e.target.dataset.rep;
-        const newColor = e.target.value.toUpperCase();
-        if (repName && newColor) {
-          alterarCorRepresentante(repName, newColor);
-        }
+    // Modal de Alteração de Cor do Representante (Design Não-Sensível e Seguro)
+    document.getElementById('btnFecharModalCor').addEventListener('click', fecharModalAlterarCor);
+    document.getElementById('btnCancelarModalCor').addEventListener('click', fecharModalAlterarCor);
+
+    const inputModalCor = document.getElementById('inputModalCor');
+    const inputModalHex = document.getElementById('inputModalCorHex');
+    const badgePreview = document.getElementById('modalCorPreviewBadge');
+
+    inputModalCor.addEventListener('input', (e) => {
+      const val = e.target.value.toUpperCase();
+      inputModalHex.value = val;
+      badgePreview.style.backgroundColor = val;
+    });
+
+    inputModalHex.addEventListener('input', (e) => {
+      let val = e.target.value.trim();
+      if (!val.startsWith('#')) val = '#' + val;
+      if (/^#[0-9A-F]{6}$/i.test(val)) {
+        inputModalCor.value = val;
+        badgePreview.style.backgroundColor = val;
       }
-    };
-    document.addEventListener('input', handleRepColorChange);
-    document.addEventListener('change', handleRepColorChange);
+    });
+
+    document.getElementById('btnModalCorAleatoria').addEventListener('click', () => {
+      const nova = getRandomColor();
+      inputModalCor.value = nova;
+      inputModalHex.value = nova;
+      badgePreview.style.backgroundColor = nova;
+    });
+
+    document.getElementById('btnSalvarModalCor').addEventListener('click', () => {
+      if (!repSelecionadoParaCor) return;
+      const corFinal = inputModalCor.value.toUpperCase();
+      alterarCorRepresentante(repSelecionadoParaCor, corFinal);
+      fecharModalAlterarCor();
+      showToast(`Cor de ${repSelecionadoParaCor} atualizada com sucesso!`, 'success');
+    });
+
+    // Delegar cliques para abrir o modal de cor a partir do Mapa ou da Tabela
+    document.addEventListener('click', (e) => {
+      const btn = e.target.closest('.btn-abrir-modal-cor');
+      if (btn) {
+        e.preventDefault();
+        e.stopPropagation();
+        const repName = btn.dataset.rep;
+        const cor = btn.dataset.cor;
+        abrirModalAlterarCor(repName, cor);
+      }
+    });
 
     // Alternância do título da aba ao sair da página (atrai o usuário de volta)
     const originalPageTitle = document.title;
@@ -705,6 +742,64 @@ const App = (() => {
     }
   }
 
+  // 12 cores recomendadas vibrantes e corporativas para toque rápido
+  const CORES_RECOMENDADAS = [
+    '#7C3AED', '#2563EB', '#059669', '#DC2626',
+    '#D97706', '#DB2777', '#0891B2', '#4F46E5',
+    '#EA580C', '#0D9488', '#65A30D', '#9333EA'
+  ];
+
+  let repSelecionadoParaCor = null;
+
+  function abrirModalAlterarCor(nomeRep, corAtual) {
+    if (!nomeRep) return;
+    repSelecionadoParaCor = nomeRep;
+
+    const modal = document.getElementById('modalAlterarCor');
+    const txtNome = document.getElementById('modalCorNomeRep');
+    const badge = document.getElementById('modalCorPreviewBadge');
+    const inputCor = document.getElementById('inputModalCor');
+    const inputHex = document.getElementById('inputModalCorHex');
+    const paleta = document.getElementById('modalCorPaletaPredefinida');
+
+    const totalCidades = new Set(
+      state.itensCadastrados
+        .filter(it => it.representante.trim().toLowerCase() === nomeRep.trim().toLowerCase())
+        .map(it => String(it.municipioId))
+    ).size;
+
+    txtNome.textContent = `${nomeRep} (${totalCidades} ${totalCidades === 1 ? 'cidade atendida' : 'cidades atendidas'})`;
+
+    const corInicial = (corAtual && corAtual.startsWith('#')) ? corAtual.toUpperCase() : '#7C3AED';
+    inputCor.value = corInicial;
+    inputHex.value = corInicial;
+    badge.style.backgroundColor = corInicial;
+
+    // Gerar paleta de 12 botões de 1 toque (fácil no mobile e tablet)
+    paleta.innerHTML = '';
+    CORES_RECOMENDADAS.forEach(c => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'w-9 h-9 rounded-xl border border-gray-300 shadow-xs transition-transform hover:scale-110 active:scale-95 focus:ring-2 focus:ring-purple-600 focus:outline-none';
+      btn.style.backgroundColor = c;
+      btn.title = `Cor ${c}`;
+      btn.addEventListener('click', () => {
+        inputCor.value = c;
+        inputHex.value = c.toUpperCase();
+        badge.style.backgroundColor = c;
+      });
+      paleta.appendChild(btn);
+    });
+
+    modal.classList.remove('hidden');
+  }
+
+  function fecharModalAlterarCor() {
+    const modal = document.getElementById('modalAlterarCor');
+    if (modal) modal.classList.add('hidden');
+    repSelecionadoParaCor = null;
+  }
+
   function sincronizarCorRepresentante(nomeRep, novaCor) {
     const nomeLower = nomeRep.trim().toLowerCase();
     let atualizados = 0;
@@ -779,12 +874,10 @@ const App = (() => {
           </span>
         </td>
         <td class="py-3 px-4 text-center">
-          <div class="flex items-center justify-center space-x-2">
-            <label class="cursor-pointer inline-flex items-center" title="Clique para alterar a cor do representante ${escapeHtml(item.representante)}">
-              <input type="color" value="${item.cor}" data-rep="${escapeHtml(item.representante)}" class="input-tabela-cor w-6 h-6 rounded-md shadow-xs border border-gray-400 hover:border-purple-600 cursor-pointer p-0 bg-transparent flex-shrink-0 transition-transform hover:scale-105" />
-            </label>
+          <button type="button" class="btn-abrir-modal-cor inline-flex items-center justify-center space-x-2 py-1 px-2.5 rounded-lg hover:bg-purple-50 border border-gray-300 hover:border-purple-600 transition-all group" data-rep="${escapeHtml(item.representante)}" data-cor="${item.cor}" title="Clique para alterar a cor do representante ${escapeHtml(item.representante)}">
+            <div class="w-5 h-5 rounded-md shadow-xs border border-black/20 flex-shrink-0 transition-transform group-hover:scale-110" style="background-color: ${item.cor};"></div>
             <span class="text-xs font-mono uppercase text-black font-bold">${item.cor}</span>
-          </div>
+          </button>
         </td>
         <td class="py-3 px-4 text-center">
           <span class="px-2 py-0.5 rounded text-xs font-black bg-purple-100 text-purple-900 border border-purple-200">
@@ -801,10 +894,10 @@ const App = (() => {
         </td>
         <td class="py-3 px-4 font-bold text-black">
           <div class="flex items-center gap-2">
-            <label class="cursor-pointer inline-flex items-center" title="Clique para alterar a cor de ${escapeHtml(item.representante)}">
-              <input type="color" value="${item.cor}" data-rep="${escapeHtml(item.representante)}" class="input-tabela-cor w-3.5 h-3.5 rounded-full border border-gray-400 hover:border-purple-600 cursor-pointer p-0 bg-transparent flex-shrink-0 transition-transform hover:scale-110" />
-            </label>
-            <span>${escapeHtml(item.representante)}</span>
+            <button type="button" class="btn-abrir-modal-cor inline-flex items-center p-0.5 rounded-full hover:ring-2 hover:ring-purple-600 transition-all flex-shrink-0" data-rep="${escapeHtml(item.representante)}" data-cor="${item.cor}" title="Clique para alterar a cor de ${escapeHtml(item.representante)}">
+              <span class="w-3.5 h-3.5 rounded-full border border-gray-400 flex-shrink-0" style="background-color: ${item.cor};"></span>
+            </button>
+            <span class="truncate max-w-[180px]">${escapeHtml(item.representante)}</span>
           </div>
         </td>
         <td class="py-3 px-4 text-center">
@@ -1160,7 +1253,8 @@ const App = (() => {
 
   return {
     init,
-    alterarCorRepresentante
+    alterarCorRepresentante,
+    abrirModalAlterarCor
   };
 })();
 

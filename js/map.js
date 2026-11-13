@@ -351,17 +351,17 @@ const MapManager = (() => {
 
   /**
    * CARD DETALHADO (Exibido no HOVER ou no CLIQUE):
-   * Mostra todas as marcas, representantes, badges, números e cores (com seletor interativo de cor)
+   * Mostra todas as marcas, representantes, badges, números e cores
    */
   function buildDetailedCardHtml(cidadeNome, itensDaCidade) {
     let rowsHtml = '';
     itensDaCidade.forEach(it => {
       rowsHtml += `
         <div class="flex items-center justify-between gap-2 py-1.5 border-b border-gray-700 last:border-0">
-          <div class="flex items-center gap-1.5 overflow-hidden">
-            <label class="cursor-pointer flex items-center" title="Clique para alterar a cor do representante ${escapeHtml(it.representante)}">
-              <input type="color" value="${it.cor}" data-rep="${escapeHtml(it.representante)}" class="input-change-rep-color w-4 h-4 rounded-full border border-white/70 cursor-pointer p-0 bg-transparent flex-shrink-0" />
-            </label>
+          <div class="flex items-center gap-2 overflow-hidden">
+            <button type="button" class="btn-abrir-modal-cor p-0.5 rounded-full hover:ring-2 hover:ring-white transition-all flex items-center justify-center flex-shrink-0" data-rep="${escapeHtml(it.representante)}" data-cor="${it.cor}" title="Clique para alterar a cor do representante ${escapeHtml(it.representante)}">
+              <span class="w-4 h-4 rounded-full border border-white/80 shadow-xs flex-shrink-0" style="background-color: ${it.cor};"></span>
+            </button>
             <span class="rep-brand-badge brand-${it.marcaId || '1'}">${escapeHtml(it.marcaNome || 'Marca')}</span>
             <span class="font-semibold text-white text-xs truncate">${escapeHtml(it.representante)}</span>
           </div>
@@ -379,8 +379,8 @@ const MapManager = (() => {
         <div class="flex flex-col gap-0.5">
           ${rowsHtml}
         </div>
-        <div class="text-[8.5px] text-gray-400 mt-1 pt-1 border-t border-gray-700/60 text-center">
-          Clique no círculo de cor para alterar o representante
+        <div class="text-[9px] text-gray-400 mt-1.5 pt-1 border-t border-gray-700/60 text-center font-medium">
+          💡 Clique na cor do representante para alterá-la
         </div>
       </div>
     `;
