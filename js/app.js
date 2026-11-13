@@ -439,7 +439,6 @@ const App = (() => {
         if (selectMunicipio && clickedMunicipioId) {
           selectMunicipio.value = clickedMunicipioId;
           onMunicipioChange(clickedMunicipioId);
-          showToast(`Cidade selecionada no mapa!`, 'info');
         }
       });
 
@@ -1004,8 +1003,11 @@ const App = (() => {
       btn.classList.add('opacity-75', 'cursor-wait');
       btnText.textContent = 'Enquadrando Estado e capturando foto...';
 
-      // 1. Foto do mapa: sempre enquadra o estado selecionado (ou todas as cidades se nenhum estado estiver aberto)
-      const targetBounds = state.estadoBounds || null;
+      // 1. Foto do mapa: sempre enquadra o estado selecionado com precisão total
+      let targetBounds = state.estadoBounds;
+      if (!targetBounds && state.estadoSelecionado) {
+        targetBounds = IBGEService.getEstadoBounds(state.estadoSelecionado.sigla);
+      }
       const captureResult = await MapManager.captureMapScreenshot(targetBounds);
 
       // 2. Planilha Excel

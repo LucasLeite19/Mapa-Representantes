@@ -331,15 +331,22 @@ const ExcelManager = (() => {
       bodyStyles: {
         fontSize: 8.5,
         textColor: [0, 0, 0],
-        valign: 'middle'
+        valign: 'middle',
+        halign: 'center'
       },
       columnStyles: {
-        0: { halign: 'center', cellWidth: 18, fontStyle: 'bold' },
-        1: { halign: 'center', cellWidth: 18 },
-        2: { halign: 'center', cellWidth: 20 },
-        3: { cellWidth: 65, fontStyle: 'bold' },
-        4: { halign: 'center', cellWidth: 40 },
-        5: { cellWidth: 80 }
+        0: { halign: 'center', cellWidth: 20, fontStyle: 'bold' },
+        1: { halign: 'center', cellWidth: 20 },
+        2: { halign: 'center', cellWidth: 22 },
+        3: { halign: 'center', cellWidth: 65, fontStyle: 'bold' },
+        4: { halign: 'center', cellWidth: 44 },
+        5: { halign: 'center', cellWidth: 80 }
+      },
+      didParseCell: function (data) {
+        if (data.section === 'body' && data.column.index === 1) {
+          // Limpa o texto da célula para NÃO exibir o código hexadecimal atrás do quadrado de cor
+          data.cell.text = [];
+        }
       },
       didDrawCell: function (data) {
         if (data.section === 'body' && data.column.index === 1) {
@@ -349,7 +356,7 @@ const ExcelManager = (() => {
             doc.setFillColor(rgb.r, rgb.g, rgb.b);
             doc.setDrawColor(76, 29, 149);
             doc.setLineWidth(0.3);
-            const size = 5;
+            const size = 5.5;
             const x = data.cell.x + (data.cell.width - size) / 2;
             const y = data.cell.y + (data.cell.height - size) / 2;
             if (isFinite(x) && isFinite(y) && isFinite(size)) {

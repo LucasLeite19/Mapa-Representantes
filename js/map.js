@@ -550,8 +550,9 @@ const MapManager = (() => {
 
   /**
    * Captura screenshot em alta resolução (scale: 2) usando dom-to-image.
-   * Se targetBounds for informado, enquadra o estado selecionado, aguarda a estabilização
-   * dos tiles e retorna tanto o Blob (para o zip) quanto a dataUrl com largura e altura (para o PDF).
+   * Enquadra automaticamente o estado selecionado (ou todas as cidades cadastradas),
+   * eliminando qualquer risco de print fora de posição caso o usuário tenha movido o mapa.
+   * Retorna tanto o Blob (para o zip) quanto a dataUrl com largura e altura (para o PDF).
    */
   async function captureMapScreenshot(targetBounds) {
     const mapElement = document.getElementById('map');
@@ -560,27 +561,33 @@ const MapManager = (() => {
     const zoomControls = mapElement.querySelectorAll('.leaflet-control-zoom');
     zoomControls.forEach(ctrl => ctrl.style.display = 'none');
 
-    // Salvar estado atual do mapa para restaurar depois
-    let prevCenter = null;
-    let prevZoom = null;
+    // Reenquadra automaticamente o Estado no momento do print
     if (map) {
-      prevCenter = map.getCenter();
-      prevZoom = map.getZoom();
-
-      if (targetBounds && typeof targetBounds.isValid === 'function' && targetBounds.isValid()) {
-        map.fitBounds(targetBounds, { padding: [25, 25], animate: false });
+      if (targetBounds) {
+        try {
+          map.fitBounds(targetBounds, { padding: [25, 25], animate: false });
+        } catch (e) {
+          console.warn('Falha no fitBounds com targetBounds:', e);
+        }
+      } else if (stateLayer && typeof stateLayer.getBounds === 'function') {
+        const b = stateLayer.getBounds();
+        if (b && typeof b.isValid === 'function' && b.isValid()) {
+          map.fitBounds(b, { padding: [25, 25], animate: false });
+        }
+      } else if (cityLayersMap.size > 0) {
+        fitAllRegisteredCities();
       }
     }
 
-    // Aguardar 600ms para renderizar completamente as camadas e polígonos
-    await new Promise(resolve => setTimeout(resolve, 600));
+    // Aguardar 800ms para renderizar completamente as camadas, polígonos e tiles do estado
+    await new Promise(resolve => setTimeout(resolve, 800));
 
     try {
       const scale = 2;
       const origWidth = mapElement.offsetWidth || 800;
       const origHeight = mapElement.offsetHeight || 560;
 
-      // dom-to-image toPng para obter a dataURL (necessária para jsPDF)
+      // dom-to-image toPng para obter a dataURL (necessária para o PDF e o PNG)
       const dataUrl = await domtoimage.toPng(mapElement, {
         width: origWidth * scale,
         height: origHeight * scale,
@@ -611,9 +618,6 @@ const MapManager = (() => {
       };
     } finally {
       zoomControls.forEach(ctrl => ctrl.style.display = '');
-      if (map && prevCenter && prevZoom && targetBounds) {
-        map.setView(prevCenter, prevZoom, { animate: false });
-      }
     }
   }
 
