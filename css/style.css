@@ -44,15 +44,16 @@
 
 /* Rótulos e Tooltips Permanentes no Centro do Município */
 .rep-custom-tooltip {
-  background: rgba(17, 24, 39, 0.94) !important;
-  border: 1px solid rgba(255, 255, 255, 0.45) !important;
-  border-radius: 6px !important;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.55) !important;
-  padding: 4px 8px !important;
+  background: rgba(17, 24, 39, 0.95) !important;
+  border: 1px solid rgba(255, 255, 255, 0.4) !important;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.6) !important;
+  padding: 5px 8px !important;
   color: #ffffff !important;
   pointer-events: none !important;
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  max-width: 260px;
 }
 
 .rep-custom-tooltip::before {
@@ -62,32 +63,42 @@
 .rep-marker-label {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 2px;
+  align-items: stretch;
+  gap: 3px;
   font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
-.rep-marker-badge {
-  background: #f59e0b;
-  color: #111827;
-  font-size: 10px;
+.rep-marker-city-title {
+  color: #f3f4f6;
+  font-size: 11px;
   font-weight: 800;
-  padding: 1px 6px;
-  border-radius: 3px;
-  line-height: 1.15;
-  letter-spacing: 0.03em;
+  text-align: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  padding-bottom: 2px;
+  margin-bottom: 2px;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.8);
 }
 
-.rep-marker-name {
+.rep-brand-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 9px;
+  font-weight: 800;
+  padding: 1px 5px;
+  border-radius: 4px;
+  line-height: 1.1;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
   color: #ffffff;
-  font-size: 11px;
-  font-weight: 700;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.95);
-  line-height: 1.25;
-  text-align: center;
-  white-space: nowrap;
 }
+
+/* Badges de cores das Marcas 1 a 6 */
+.brand-1 { background-color: #3b82f6; } /* Azul */
+.brand-2 { background-color: #ef4444; } /* Vermelho */
+.brand-3 { background-color: #10b981; } /* Verde Esmeralda */
+.brand-4 { background-color: #f59e0b; color: #111827 !important; } /* Âmbar */
+.brand-5 { background-color: #8b5cf6; } /* Roxo */
+.brand-6 { background-color: #ec4899; } /* Rosa */
 
 /* Controles de camadas ativas */
 .btn-tile-active {

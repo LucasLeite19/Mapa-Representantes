@@ -1,7 +1,8 @@
 /**
  * MÓDULO PRINCIPAL: APP CONTROLLER
- * Coordena interface de usuário, eventos, regras de negócio e sincronização entre mapa e tabela.
- * 100% dos dados mantidos exclusivamente em memória volátil (sem localStorage).
+ * Coordena interface, eventos, regras de negócio e sincronização entre mapa e tabela.
+ * Suporta até 6 marcas distintas por município (cada município pode ter de 1 a 6 representantes).
+ * 100% volátil em memória (sem localStorage).
  */
 
 const App = (() => {
@@ -11,6 +12,15 @@ const App = (() => {
     municipiosAtuais: [],
     estadoSelecionado: null,
     estadoBounds: null,
+    // Configuração das marcas (até 6 marcas)
+    marcas: [
+      { id: 1, nome: 'Marca 1' },
+      { id: 2, nome: 'Marca 2' },
+      { id: 3, nome: 'Marca 3' },
+      { id: 4, nome: 'Marca 4' },
+      { id: 5, nome: 'Marca 5' },
+      { id: 6, nome: 'Marca 6' }
+    ],
     itensCadastrados: [],
     nextSeqId: 1,
     previewGeoJson: null,
@@ -21,21 +31,52 @@ const App = (() => {
    * Inicialização do Sistema
    */
   async function init() {
-    // 1. Inicializa o mapa
     MapManager.init();
-
-    // 2. Configura Eventos da Interface
     bindEvents();
-
-    // 3. Define cor inicial aleatória
+    renderSelectMarcas();
     setCorAtual(getRandomColor());
-
-    // 4. Carrega os Estados da Federação
     await carregarEstados();
-
-    // 5. Renderiza tabela vazia inicial
     renderTabela();
     atualizarMetricas();
+  }
+
+  /**
+   * Renderiza as opções do <select id="selectMarca">
+   */
+  function renderSelectMarcas(municipioId = null) {
+    const select = document.getElementById('selectMarca');
+    if (!select) return;
+
+    const valorAtual = select.value;
+    select.innerHTML = '';
+
+    // Marcas já ocupadas no município atual
+    const marcasOcupadas = new Set();
+    if (municipioId) {
+      state.itensCadastrados
+        .filter(it => String(it.municipioId) === String(municipioId))
+        .forEach(it => marcasOcupadas.add(Number(it.marcaId)));
+    }
+
+    state.marcas.forEach(marca => {
+      const opt = document.createElement('option');
+      opt.value = marca.id;
+      opt.dataset.nome = marca.nome;
+
+      if (marcasOcupadas.has(marca.id)) {
+        opt.disabled = true;
+        opt.textContent = `${marca.nome} (Já cadastrada nesta cidade)`;
+      } else {
+        opt.textContent = marca.nome;
+      }
+      select.appendChild(opt);
+    });
+
+    // Seleciona a primeira marca disponível
+    const primeiraDisponivel = Array.from(select.options).find(opt => !opt.disabled);
+    if (primeiraDisponivel) {
+      select.value = primeiraDisponivel.value;
+    }
   }
 
   /**
@@ -120,8 +161,7 @@ const App = (() => {
     // Botão Enquadrar (Reset Zoom)
     document.getElementById('btnResetZoom').addEventListener('click', () => {
       if (state.itensCadastrados.length > 0) {
-        const layers = state.itensCadastrados.map(it => it.layer).filter(Boolean);
-        MapManager.fitLayers(layers);
+        MapManager.fitAllRegisteredCities();
       } else if (state.estadoBounds) {
         MapManager.fitToBounds(state.estadoBounds);
       } else {
@@ -134,7 +174,6 @@ const App = (() => {
       MapManager.toggleFullScreen();
     });
 
-    // Tecla ESC para sair da tela cheia
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
         const wrapper = document.getElementById('mapWrapper');
@@ -182,6 +221,55 @@ const App = (() => {
 
     // Botão Baixar Pacote (.zip)
     document.getElementById('btnBaixarPacote').addEventListener('click', baixarPacoteFinal);
+
+    // Modal de Gerenciar Nomes das Marcas
+    const btnGerenciarMarcas = document.getElementById('btnGerenciarMarcas');
+    const modalMarcas = document.getElementById('modalMarcas');
+    const btnFecharModalMarcas = document.getElementById('btnFecharModalMarcas');
+    const btnSalvarNomesMarcas = document.getElementById('btnSalvarNomesMarcas');
+
+    if (btnGerenciarMarcas && modalMarcas) {
+      btnGerenciarMarcas.addEventListener('click', () => {
+        // Preenche os campos do modal com os nomes atuais
+        state.marcas.forEach(m => {
+          const inp = document.getElementById(`inputNomeMarca${m.id}`);
+          if (inp) inp.value = m.nome;
+        });
+        modalMarcas.classList.remove('hidden');
+      });
+
+      btnFecharModalMarcas.addEventListener('click', () => {
+        modalMarcas.classList.add('hidden');
+      });
+
+      btnSalvarNomesMarcas.addEventListener('click', () => {
+        state.marcas.forEach(m => {
+          const inp = document.getElementById(`inputNomeMarca${m.id}`);
+          if (inp && inp.value.trim()) {
+            m.nome = inp.value.trim();
+          }
+        });
+
+        // Atualiza registros existentes que usavam essa marca
+        state.itensCadastrados.forEach(it => {
+          const marcaObj = state.marcas.find(m => m.id === Number(it.marcaId));
+          if (marcaObj) it.marcaNome = marcaObj.nome;
+        });
+
+        // Atualiza camadas do mapa e tabela
+        const cidadesUnicas = new Set(state.itensCadastrados.map(it => String(it.municipioId)));
+        cidadesUnicas.forEach(mId => {
+          const itensDaCidade = state.itensCadastrados.filter(it => String(it.municipioId) === mId);
+          MapManager.syncMunicipalityLayer(mId, null, itensDaCidade);
+        });
+
+        const selectMun = document.getElementById('selectMunicipio');
+        renderSelectMarcas(selectMun ? selectMun.value : null);
+        renderTabela();
+        modalMarcas.classList.add('hidden');
+        showToast('Nomes das marcas atualizados com sucesso!', 'success');
+      });
+    }
   }
 
   /**
@@ -205,7 +293,7 @@ const App = (() => {
     } catch (err) {
       console.error(err);
       select.innerHTML = '<option value="">Erro ao carregar Estados</option>';
-      showToast('Não foi possível obter a lista de estados do IBGE.', 'error');
+      showToast('Falha ao carregar estados do IBGE.', 'error');
     }
   }
 
@@ -229,6 +317,7 @@ const App = (() => {
       labelTotal.textContent = '';
       infoModelo.textContent = 'Nenhum Estado selecionado';
       MapManager.resetToBrasil();
+      renderSelectMarcas(null);
       return;
     }
 
@@ -236,14 +325,12 @@ const App = (() => {
     state.estadoSelecionado = uf;
     infoModelo.textContent = `Estado Selecionado: ${uf.nome} (${uf.sigla})`;
 
-    // Enquadramento imediato no Estado via Bounding Box pré-computada (100% garantido e instantâneo)
     const bounds = IBGEService.getEstadoBounds(uf.sigla);
     if (bounds) {
       state.estadoBounds = bounds;
       MapManager.fitToBounds(bounds);
     }
 
-    // Carregar municípios do Estado
     selectMunicipio.disabled = true;
     selectMunicipio.innerHTML = '<option value="">Carregando municípios...</option>';
     labelTotal.textContent = 'Buscando...';
@@ -263,40 +350,53 @@ const App = (() => {
   }
 
   /**
-   * Atualiza as opções do <select> de municípios respeitando a regra de desabilitar já adicionados
+   * Atualiza as opções do <select id="selectMunicipio"> exibindo o status de marcas (ex: 2/6 marcas)
    */
   function atualizarSelectMunicipios() {
     const select = document.getElementById('selectMunicipio');
     const valorAnterior = select.value;
     select.innerHTML = '<option value="">Selecione um Município...</option>';
 
-    const idsCadastrados = new Set(state.itensCadastrados.map(it => String(it.municipioId)));
+    // Mapa de contagem de marcas cadastradas por município
+    const contagemPorCidade = new Map();
+    state.itensCadastrados.forEach(it => {
+      const key = String(it.municipioId);
+      contagemPorCidade.set(key, (contagemPorCidade.get(key) || 0) + 1);
+    });
 
     state.municipiosAtuais.forEach(m => {
       const opt = document.createElement('option');
+      const mId = String(m.id);
       opt.value = m.id;
       opt.dataset.nome = m.nome;
 
-      if (idsCadastrados.has(String(m.id))) {
+      const qtdMarcas = contagemPorCidade.get(mId) || 0;
+      if (qtdMarcas >= 6) {
         opt.disabled = true;
-        opt.textContent = `${m.nome} (Já adicionado)`;
+        opt.textContent = `${m.nome} (6/6 marcas - Esgotado)`;
+      } else if (qtdMarcas > 0) {
+        opt.textContent = `${m.nome} (${qtdMarcas}/6 marcas cadastradas)`;
       } else {
         opt.textContent = m.nome;
       }
       select.appendChild(opt);
     });
 
-    if (valorAnterior && !idsCadastrados.has(String(valorAnterior))) {
+    if (valorAnterior && (contagemPorCidade.get(String(valorAnterior)) || 0) < 6) {
       select.value = valorAnterior;
     }
+
+    renderSelectMarcas(select.value);
   }
 
   /**
-   * Ação ao selecionar um município: busca GeoJSON e mostra linha amarela pontilhada
+   * Ação ao selecionar um município
    */
   async function onMunicipioChange(municipioId) {
     MapManager.clearPreview();
     state.previewGeoJson = null;
+
+    renderSelectMarcas(municipioId);
 
     const helper = document.getElementById('helperMunicipio');
     if (!municipioId) {
@@ -324,11 +424,13 @@ const App = (() => {
   async function salvarRepresentanteManual() {
     const selectEstado = document.getElementById('selectEstado');
     const selectMunicipio = document.getElementById('selectMunicipio');
+    const selectMarca = document.getElementById('selectMarca');
     const inputRep = document.getElementById('inputRepresentante');
     const inputCor = document.getElementById('inputCor');
 
     const estadoId = selectEstado.value;
     const municipioId = selectMunicipio.value;
+    const marcaId = Number(selectMarca.value);
     const nome = inputRep.value.trim();
     const cor = inputCor.value.toUpperCase();
 
@@ -340,17 +442,41 @@ const App = (() => {
       showToast('Selecione um Município.', 'warning');
       return;
     }
+    if (!marcaId) {
+      showToast('Selecione uma Marca.', 'warning');
+      return;
+    }
     if (!nome) {
       showToast('Digite o nome do Representante.', 'warning');
       inputRep.focus();
       return;
     }
 
+    // Verificar se a marca já está ocupada nesta cidade
+    const marcaJaExiste = state.itensCadastrados.some(
+      it => String(it.municipioId) === String(municipioId) && Number(it.marcaId) === marcaId
+    );
+    if (marcaJaExiste) {
+      showToast('Esta marca já está cadastrada para este município!', 'warning');
+      return;
+    }
+
+    // Verificar limite máximo de 6 marcas para esta cidade
+    const totalNestaCidade = state.itensCadastrados.filter(
+      it => String(it.municipioId) === String(municipioId)
+    ).length;
+    if (totalNestaCidade >= 6) {
+      showToast('Limite máximo de 6 marcas por município atingido!', 'warning');
+      return;
+    }
+
     const optUf = selectEstado.options[selectEstado.selectedIndex];
     const optMun = selectMunicipio.options[selectMunicipio.selectedIndex];
-    const municipioNome = optMun.dataset.nome || optMun.textContent.replace(' (Já adicionado)', '').trim();
+    const optMarca = selectMarca.options[selectMarca.selectedIndex];
+    const municipioNome = optMun.dataset.nome || optMun.textContent.split(' (')[0].trim();
+    const marcaNome = optMarca.dataset.nome || optMarca.textContent.split(' (')[0].trim();
 
-    // Obter malha (do preview ou buscar se necessário)
+    // Obter malha geográfica
     let geoJson = state.previewGeoJson;
     if (!geoJson) {
       try {
@@ -361,11 +487,10 @@ const App = (() => {
       }
     }
 
-    // Remover linha amarela de preview
     MapManager.clearPreview();
     state.previewGeoJson = null;
 
-    // Se o representante já existia e a cor foi alterada, atualiza todos os anteriores
+    // Sincroniza cor do representante em todos os seus registros caso tenha mudado
     sincronizarCorRepresentante(nome, cor);
 
     const seqId = state.nextSeqId++;
@@ -377,17 +502,19 @@ const App = (() => {
       estadoNome: optUf.dataset.nome,
       municipioId: municipioId,
       municipioNome: municipioNome,
+      marcaId: marcaId,
+      marcaNome: marcaNome,
       representante: nome,
       cor: cor,
-      geoJson: geoJson,
-      layer: null
+      geoJson: geoJson
     };
 
-    // Adiciona malha definitiva pintada com o rótulo permanente
-    item.layer = MapManager.addMunicipalityLayer(item);
-
-    // Insere no topo da lista (mais recentes primeiro)
+    // Adiciona na memória (mais recentes primeiro)
     state.itensCadastrados.unshift(item);
+
+    // Atualiza a renderização da cidade no mapa com suporte a múltiplas marcas
+    const itensDestaCidade = state.itensCadastrados.filter(it => String(it.municipioId) === String(municipioId));
+    MapManager.syncMunicipalityLayer(municipioId, geoJson, itensDestaCidade);
 
     // Atualiza interface
     atualizarSelectMunicipios();
@@ -396,14 +523,15 @@ const App = (() => {
 
     // Resetar campos
     selectMunicipio.value = '';
+    renderSelectMarcas(null);
     setCorAtual(getRandomColor());
 
-    // Retorna o zoom do mapa para abranger o Estado inteiro
+    // Retorna o zoom do mapa para abranger o Estado
     if (state.estadoBounds) {
       MapManager.fitToBounds(state.estadoBounds);
     }
 
-    showToast(`Município ${municipioNome} cadastrado com sucesso (Nº ${seqId})!`, 'success');
+    showToast(`${municipioNome} cadastrado na ${marcaNome} com sucesso (Nº ${seqId})!`, 'success');
   }
 
   /**
@@ -412,22 +540,27 @@ const App = (() => {
   function sincronizarCorRepresentante(nomeRep, novaCor) {
     const nomeLower = nomeRep.trim().toLowerCase();
     let atualizados = 0;
+    const cidadesAfetadas = new Set();
 
     state.itensCadastrados.forEach(it => {
       if (it.representante.trim().toLowerCase() === nomeLower && it.cor !== novaCor) {
         it.cor = novaCor;
-        MapManager.updateLayerColor(it.layer, novaCor);
+        cidadesAfetadas.add(String(it.municipioId));
         atualizados++;
       }
     });
 
     if (atualizados > 0) {
+      cidadesAfetadas.forEach(mId => {
+        const itensDaCidade = state.itensCadastrados.filter(it => String(it.municipioId) === mId);
+        MapManager.syncMunicipalityLayer(mId, null, itensDaCidade);
+      });
       renderTabela();
     }
   }
 
   /**
-   * Renderiza a Tabela Inferior de Registros
+   * Renderiza a Tabela Inferior de Registros com a coluna Marca
    */
   function renderTabela() {
     const tbody = document.getElementById('tabelaCorpo');
@@ -439,6 +572,7 @@ const App = (() => {
       itens = itens.filter(it =>
         it.municipioNome.toLowerCase().includes(termo) ||
         it.representante.toLowerCase().includes(termo) ||
+        it.marcaNome.toLowerCase().includes(termo) ||
         it.estadoSigla.toLowerCase().includes(termo) ||
         String(it.seqId).includes(termo)
       );
@@ -449,7 +583,7 @@ const App = (() => {
     if (itens.length === 0) {
       tbody.innerHTML = `
         <tr>
-          <td colspan="6" class="py-10 text-center text-gray-400">
+          <td colspan="7" class="py-10 text-center text-gray-400">
             ${state.itensCadastrados.length === 0 ? 'Nenhum município cadastrado ainda.' : 'Nenhum registro encontrado para a busca.'}
           </td>
         </tr>
@@ -483,6 +617,11 @@ const App = (() => {
         <td class="py-3 px-4 font-semibold text-gray-800">
           ${escapeHtml(item.municipioNome)}
         </td>
+        <td class="py-3 px-4 text-center">
+          <span class="rep-brand-badge brand-${item.marcaId}">
+            ${escapeHtml(item.marcaNome)}
+          </span>
+        </td>
         <td class="py-3 px-4 font-medium text-gray-700">
           <div class="flex items-center gap-1.5">
             <span class="w-2.5 h-2.5 rounded-full" style="background-color: ${item.cor};"></span>
@@ -504,7 +643,6 @@ const App = (() => {
       tbody.appendChild(tr);
     });
 
-    // Eventos dos botões da tabela
     tbody.querySelectorAll('.btn-remover').forEach(btn => {
       btn.addEventListener('click', (e) => {
         removerItem(e.currentTarget.dataset.id);
@@ -515,13 +653,16 @@ const App = (() => {
       btn.addEventListener('click', (e) => {
         const id = e.currentTarget.dataset.id;
         const item = state.itensCadastrados.find(it => it.id === id);
-        if (item && item.layer) {
-          const map = MapManager.getMapInstance();
-          map.fitBounds(item.layer.getBounds(), { maxZoom: 12, padding: [50, 50] });
-          item.layer.setStyle({ weight: 4, color: '#FFFFFF' });
-          setTimeout(() => {
-            if (item.layer) item.layer.setStyle({ weight: 1.5, color: '#1F2937' });
-          }, 1800);
+        if (item) {
+          const entry = MapManager.getCityLayer(item.municipioId);
+          if (entry && entry.layer) {
+            const map = MapManager.getMapInstance();
+            map.fitBounds(entry.layer.getBounds(), { maxZoom: 12, padding: [50, 50] });
+            entry.layer.setStyle({ weight: 4, color: '#FFFFFF' });
+            setTimeout(() => {
+              if (entry.layer) entry.layer.setStyle({ weight: 1.5, color: '#1F2937' });
+            }, 1800);
+          }
         }
       });
     });
@@ -535,28 +676,27 @@ const App = (() => {
     if (index === -1) return;
 
     const item = state.itensCadastrados[index];
+    const mId = String(item.municipioId);
 
-    // Remove camada do mapa
-    MapManager.removeLayer(item.layer);
-
-    // Remove da memória
+    // Remove do array em memória
     state.itensCadastrados.splice(index, 1);
 
-    // Reabilita no select de municípios
-    atualizarSelectMunicipios();
+    // Atualiza a camada do mapa com os itens restantes daquela cidade
+    const itensRestantesDaCidade = state.itensCadastrados.filter(it => String(it.municipioId) === mId);
+    MapManager.syncMunicipalityLayer(mId, null, itensRestantesDaCidade);
 
-    // Atualiza tabela e métricas
+    // Atualiza seletores e tabela
+    atualizarSelectMunicipios();
     renderTabela();
     atualizarMetricas();
 
-    showToast(`Município ${item.municipioNome} removido.`, 'info');
+    showToast(`${item.municipioNome} (${item.marcaNome}) removido.`, 'info');
   }
 
-  /**
-   * Atualiza as métricas do Header
-   */
   function atualizarMetricas() {
-    document.getElementById('metricTotalCidades').textContent = state.itensCadastrados.length;
+    document.getElementById('metricTotalCidades').textContent = new Set(
+      state.itensCadastrados.map(it => String(it.municipioId))
+    ).size;
     const reps = new Set(state.itensCadastrados.map(it => it.representante.trim().toLowerCase())).size;
     document.getElementById('metricTotalReps').textContent = reps;
   }
@@ -578,7 +718,7 @@ const App = (() => {
       ExcelManager.downloadTemplate(
         state.estadoSelecionado.sigla,
         state.municipiosAtuais,
-        state.itensCadastrados
+        state.marcas
       );
       showToast(`Modelo de planilha baixado (${state.municipiosAtuais.length} cidades).`, 'success');
     } catch (e) {
@@ -609,7 +749,7 @@ const App = (() => {
   }
 
   /**
-   * Executa a Importação em Massa com Modal de Progresso
+   * Executa a Importação em Massa com suporte a Marca (até 6 marcas por município)
    */
   async function executarImportacaoEmLote(rows) {
     const modal = document.getElementById('modalProgresso');
@@ -629,7 +769,7 @@ const App = (() => {
       coresReps.set(it.representante.trim().toLowerCase(), it.cor);
     });
 
-    const idsCadastrados = new Set(state.itensCadastrados.map(it => String(it.municipioId)));
+    const cidadesModificadas = new Set();
     const batchSize = 4;
 
     for (let i = 0; i < total; i += batchSize) {
@@ -640,16 +780,35 @@ const App = (() => {
         const nomeRep = String(row['Representante'] || row['representante'] || row['REPRESENTANTE']).trim();
         const nomeMun = String(row['Município'] || row['Municipio'] || row['municipio'] || 'Município').trim();
         const siglaUf = String(row['Estado'] || row['UF'] || row['uf'] || (state.estadoSelecionado ? state.estadoSelecionado.sigla : 'BR')).trim();
+        let nomeMarca = String(row['Marca'] || row['marca'] || row['MARCA'] || '').trim();
         let corHex = String(row['Cor Hex'] || row['Cor'] || row['cor'] || '').trim().toUpperCase();
 
         try {
-          // Se já cadastrado, remove o antigo para substituir
-          if (idsCadastrados.has(idIbge)) {
-            const idx = state.itensCadastrados.findIndex(it => String(it.municipioId) === idIbge);
-            if (idx !== -1) {
-              MapManager.removeLayer(state.itensCadastrados[idx].layer);
-              state.itensCadastrados.splice(idx, 1);
-            }
+          // Identificar ou atribuir a marca
+          let marcaObj = null;
+          if (nomeMarca) {
+            marcaObj = state.marcas.find(m => m.nome.toLowerCase() === nomeMarca.toLowerCase());
+          }
+          if (!marcaObj) {
+            // Se marca não especificada, procura a primeira marca ainda livre para esta cidade
+            const marcasUsadas = new Set(
+              state.itensCadastrados.filter(it => String(it.municipioId) === idIbge).map(it => it.marcaId)
+            );
+            marcaObj = state.marcas.find(m => !marcasUsadas.has(m.id)) || state.marcas[0];
+          }
+
+          // Se a marca já está ocupada nesta cidade, remove o anterior para sobrescrever
+          const idxAntigo = state.itensCadastrados.findIndex(
+            it => String(it.municipioId) === idIbge && it.marcaId === marcaObj.id
+          );
+          if (idxAntigo !== -1) {
+            state.itensCadastrados.splice(idxAntigo, 1);
+          }
+
+          // Verificar limite de 6 marcas
+          const qtdAtual = state.itensCadastrados.filter(it => String(it.municipioId) === idIbge).length;
+          if (qtdAtual >= 6) {
+            return; // Limite atingido
           }
 
           // Cor do representante
@@ -679,15 +838,15 @@ const App = (() => {
             estadoNome: '',
             municipioId: idIbge,
             municipioNome: nomeMun,
+            marcaId: marcaObj.id,
+            marcaNome: marcaObj.nome,
             representante: nomeRep,
             cor: corHex,
-            geoJson: geoJson,
-            layer: null
+            geoJson: geoJson
           };
 
-          item.layer = MapManager.addMunicipalityLayer(item);
           state.itensCadastrados.unshift(item);
-          idsCadastrados.add(idIbge);
+          cidadesModificadas.add(idIbge);
           adicionados++;
 
         } catch (err) {
@@ -703,16 +862,21 @@ const App = (() => {
       }));
     }
 
+    // Sincroniza todas as camadas de municípios afetados no mapa
+    cidadesModificadas.forEach(mId => {
+      const itensDaCidade = state.itensCadastrados.filter(it => String(it.municipioId) === mId);
+      const geoJson = itensDaCidade[0] ? itensDaCidade[0].geoJson : null;
+      MapManager.syncMunicipalityLayer(mId, geoJson, itensDaCidade);
+    });
+
     modal.classList.add('hidden');
 
     atualizarSelectMunicipios();
     renderTabela();
     atualizarMetricas();
 
-    // Enquadrar cidades adicionadas
     if (state.itensCadastrados.length > 0) {
-      const layers = state.itensCadastrados.map(it => it.layer).filter(Boolean);
-      MapManager.fitLayers(layers);
+      MapManager.fitAllRegisteredCities();
     }
 
     showToast(`Importação concluída! ${adicionados} adicionados com sucesso${erros > 0 ? `, ${erros} com falha` : ''}.`, adicionados > 0 ? 'success' : 'warning');
@@ -738,17 +902,12 @@ const App = (() => {
       btn.classList.add('opacity-75', 'cursor-wait');
       btnText.textContent = 'Gerando print do mapa...';
 
-      // 1. Print do mapa via dom-to-image (scale 2, delay 500ms, sem controles)
       const imageBlob = await MapManager.captureMapScreenshot();
 
       btnText.textContent = 'Gerando planilha estilizada...';
-
-      // 2. Planilha Excel via ExcelJS (cores ARGB na coluna Cor e texto do representante)
       const excelBuffer = await ExcelManager.generateStyledExcelBuffer(state.itensCadastrados);
 
       btnText.textContent = 'Compactando arquivo .zip...';
-
-      // 3. Compactação e download via JSZip e FileSaver.js
       await ExcelManager.downloadZipPackage(imageBlob, excelBuffer);
 
       showToast('Pacote .zip gerado e baixado com sucesso!', 'success');
@@ -763,7 +922,6 @@ const App = (() => {
     }
   }
 
-  // Funções Auxiliares
   function setCorAtual(corHex) {
     const val = corHex.toUpperCase();
     document.getElementById('inputCor').value = val;
@@ -828,5 +986,4 @@ const App = (() => {
   };
 })();
 
-// Inicializa quando o DOM estiver pronto
 window.addEventListener('DOMContentLoaded', App.init);

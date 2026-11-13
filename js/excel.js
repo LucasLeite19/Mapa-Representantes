@@ -1,16 +1,13 @@
 /**
  * MÓDULO: EXCEL & ZIP MANAGER
  * Responsável por:
- * 1. SheetJS: Geração e leitura da planilha modelo de importação (.xlsx).
- * 2. ExcelJS: Geração da planilha final estilizada (células coloridas em ARGB e texto colorido em negrito).
+ * 1. SheetJS: Geração e leitura da planilha modelo com suporte a Marcas (.xlsx).
+ * 2. ExcelJS: Geração da planilha final estilizada (célula Cor em ARGB, coluna Marca e Representante colorido em negrito).
  * 3. JSZip & FileSaver.js: Empacotamento do print do mapa e da planilha em um arquivo .zip.
  */
 
 const ExcelManager = (() => {
 
-  /**
-   * Converte Hex (#RRGGBB) para ARGB exigido pelo ExcelJS (FFRRGGBB)
-   */
   function hexToArgb(hex) {
     if (!hex) return 'FF000000';
     const clean = hex.replace('#', '').trim().toUpperCase();
@@ -20,37 +17,34 @@ const ExcelManager = (() => {
   }
 
   /**
-   * Baixa a Planilha Modelo para o Estado Selecionado (SheetJS)
+   * Baixa a Planilha Modelo para o Estado Selecionado com a coluna "Marca" (SheetJS)
    */
-  function downloadTemplate(estadoSigla, municipios, itensCadastrados) {
+  function downloadTemplate(estadoSigla, municipios, marcasDisponiveis) {
     if (!municipios || municipios.length === 0) {
       throw new Error('Nenhum município disponível para gerar o modelo.');
     }
 
-    const mapaCadastrados = new Map();
-    itensCadastrados.forEach(it => {
-      mapaCadastrados.set(String(it.municipioId), it);
-    });
+    const marcaPadrao = marcasDisponiveis && marcasDisponiveis[0] ? marcasDisponiveis[0].nome : 'Marca 1';
 
-    // Colunas: ID IBGE, Estado, Município, Representante, Cor Hex
+    // Colunas: ID IBGE, Estado, Município, Marca, Representante, Cor Hex
     const rows = municipios.map(m => {
-      const existente = mapaCadastrados.get(String(m.id));
       return {
         'ID IBGE': m.id,
         'Estado': estadoSigla,
         'Município': m.nome,
-        'Representante': existente ? existente.representante : '',
-        'Cor Hex': existente ? existente.cor : ''
+        'Marca': marcaPadrao,
+        'Representante': '',
+        'Cor Hex': ''
       };
     });
 
     const worksheet = XLSX.utils.json_to_sheet(rows);
 
-    // Largura recomendada das colunas
     worksheet['!cols'] = [
       { wch: 14 }, // ID IBGE
       { wch: 8 },  // Estado
       { wch: 32 }, // Município
+      { wch: 16 }, // Marca
       { wch: 30 }, // Representante
       { wch: 12 }  // Cor Hex
     ];
@@ -76,7 +70,7 @@ const ExcelManager = (() => {
       throw new Error('A planilha está vazia.');
     }
 
-    // Filtrar apenas linhas onde a coluna "Representante" e "ID IBGE" estão preenchidas
+    // Filtrar apenas linhas com "Representante" e "ID IBGE" preenchidos
     const validRows = rows.filter(row => {
       const rep = row['Representante'] || row['representante'] || row['REPRESENTANTE'];
       const id = row['ID IBGE'] || row['ID'] || row['IBGE'] || row['id_ibge'] || row['Codigo'];
@@ -87,10 +81,7 @@ const ExcelManager = (() => {
   }
 
   /**
-   * Gera a Planilha Final Avançada com cores em ARGB (ExcelJS)
-   * Regra 7: A coluna "Cor" não tem texto, apenas o fundo preenchido.
-   * O nome do representante é escrito com a mesma cor em negrito.
-   * A planilha é ordenada pelo Nº do mapa.
+   * Gera a Planilha Final Avançada com cores em ARGB e coluna Marca (ExcelJS)
    */
   async function generateStyledExcelBuffer(itensCadastrados) {
     const workbook = new ExcelJS.Workbook();
@@ -101,13 +92,14 @@ const ExcelManager = (() => {
       views: [{ showGridLines: true }]
     });
 
-    // Definição das colunas
+    // Colunas: Nº, Cor, Estado, Município, Marca, Representante
     sheet.columns = [
       { header: 'Nº', key: 'seq', width: 8 },
       { header: 'Cor', key: 'cor', width: 12 },
       { header: 'Estado', key: 'estado', width: 12 },
-      { header: 'Município', key: 'municipio', width: 32 },
-      { header: 'Representante', key: 'representante', width: 32 }
+      { header: 'Município', key: 'municipio', width: 30 },
+      { header: 'Marca', key: 'marca', width: 18 },
+      { header: 'Representante', key: 'representante', width: 30 }
     ];
 
     // Estilo do Cabeçalho
@@ -129,7 +121,7 @@ const ExcelManager = (() => {
       };
     });
 
-    // Ordenar estritamente pelo sequencial Nº crescente do mapa
+    // Ordenar pelo sequencial Nº crescente do mapa
     const itensOrdenados = [...itensCadastrados].sort((a, b) => a.seqId - b.seqId);
 
     itensOrdenados.forEach(item => {
@@ -140,6 +132,7 @@ const ExcelManager = (() => {
         cor: '', // Regra: Sem texto na coluna cor!
         estado: item.estadoSigla,
         municipio: item.municipioNome,
+        marca: item.marcaNome,
         representante: item.representante
       });
 
@@ -168,6 +161,11 @@ const ExcelManager = (() => {
       cellMun.alignment = { vertical: 'middle', horizontal: 'left' };
       cellMun.font = { size: 10, color: { argb: 'FF111827' } };
 
+      // Célula Marca
+      const cellMarca = row.getCell('marca');
+      cellMarca.alignment = { vertical: 'middle', horizontal: 'center' };
+      cellMarca.font = { bold: true, size: 10, color: { argb: 'FF4B5563' } };
+
       // Célula Representante: Escrito com a MESMA COR em NEGRITO
       const cellRep = row.getCell('representante');
       cellRep.alignment = { vertical: 'middle', horizontal: 'left' };
@@ -177,7 +175,6 @@ const ExcelManager = (() => {
         size: 11
       };
 
-      // Bordas finas em todas as células de dados
       row.eachCell(cell => {
         cell.border = {
           top: { style: 'thin', color: { argb: 'FFE5E7EB' } },
@@ -192,7 +189,7 @@ const ExcelManager = (() => {
   }
 
   /**
-   * Empacota o print do mapa e a planilha Excel em um arquivo .zip e inicia o download
+   * Empacota o print do mapa e a planilha Excel em .zip e inicia o download
    */
   async function downloadZipPackage(imageBlob, excelBuffer) {
     const zip = new JSZip();
