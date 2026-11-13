@@ -690,8 +690,6 @@ const App = (() => {
     if (state.estadoBounds) {
       MapManager.fitToBounds(state.estadoBounds);
     }
-
-    showToast(`${municipioNome} cadastrado na ${marcaNome} com sucesso (Nº ${seqId})!`, 'success');
   }
 
   function sincronizarCorRepresentante(nomeRep, novaCor) {
@@ -839,8 +837,6 @@ const App = (() => {
     renderTabela();
     atualizarMetricas();
     atualizarResumoLateral();
-
-    showToast(`${item.municipioNome} (${item.marcaNome}) removido.`, 'info');
   }
 
   function atualizarMetricas() {

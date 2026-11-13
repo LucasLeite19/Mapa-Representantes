@@ -270,6 +270,34 @@
   color: #7c3aed !important;
 }
 
+/* Painel Flutuante Duplo em Tela Cheia (Fundo Preto com Alto Contraste) */
+#floatingFullscreenToolbar .fullscreen-card-dark {
+  background: rgba(10, 10, 15, 0.94) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7) !important;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+#floatingFullscreenToolbar .btn-tile-inactive {
+  background-color: #18181b !important;
+  color: #f4f4f5 !important;
+  border: 1px solid #27272a !important;
+}
+
+#floatingFullscreenToolbar .btn-tile-inactive:hover {
+  background-color: #27272a !important;
+  color: #c4b5fd !important;
+  border-color: #7c3aed !important;
+}
+
+#floatingFullscreenToolbar .btn-tile-active {
+  background-color: #7c3aed !important;
+  color: #ffffff !important;
+  border: 1px solid #a78bfa !important;
+  box-shadow: 0 0 12px rgba(124, 58, 237, 0.5) !important;
+}
+
 /* Scrollbars limpos */
 ::-webkit-scrollbar {
   width: 6px;

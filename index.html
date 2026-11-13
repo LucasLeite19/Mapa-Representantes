@@ -356,14 +356,14 @@
         <div id="mapWrapper">
           <div id="map"></div>
 
-          <!-- Painel Flutuante Duplo em Tela Cheia no Canto Superior Direito -->
+          <!-- Painel Flutuante Duplo em Tela Cheia no Canto Superior Direito (Fundo Preto com Alto Contraste) -->
           <div id="floatingFullscreenToolbar" class="no-export hidden absolute top-3 right-3 z-30 flex items-start gap-2.5 pointer-events-auto">
             
-            <!-- Quadradinho 1: Configurações de Camadas do Mapa (Vertical) -->
-            <div class="bg-white/95 backdrop-blur-md p-2 rounded-xl shadow-lg border border-gray-300 flex flex-col gap-1.5 min-w-[125px]">
-              <div class="text-[10px] font-black text-gray-800 uppercase tracking-wider px-1 pb-1 border-b border-gray-200 flex items-center justify-between">
-                <span>Camadas</span>
-                <span class="text-purple-600">🗺️</span>
+            <!-- Quadradinho 1: Configurações de Camadas do Mapa (Vertical Preto) -->
+            <div class="fullscreen-card-dark rounded-xl p-2.5 shadow-2xl border border-gray-700 flex flex-col gap-1.5 min-w-[130px]">
+              <div class="text-[10px] font-black text-gray-300 uppercase tracking-wider px-1 pb-1 border-b border-gray-800 flex items-center justify-between">
+                <span class="text-white">Camadas</span>
+                <span class="text-purple-400">🗺️</span>
               </div>
               <div class="flex flex-col gap-1">
                 <button data-layer="esri" class="btn-tile-layer btn-tile-active w-full text-left px-2.5 py-1.5 rounded-lg font-bold transition-all text-xs">Satélite</button>
@@ -373,55 +373,55 @@
               </div>
             </div>
 
-            <!-- Quadradinho 2: Configurações Gerais e Ajustes do Mapa (Vertical) -->
-            <div class="bg-white/95 backdrop-blur-md p-2 rounded-xl shadow-lg border border-gray-300 flex flex-col gap-1.5 min-w-[135px]">
-              <div class="text-[10px] font-black text-gray-800 uppercase tracking-wider px-1 pb-1 border-b border-gray-200 flex items-center justify-between">
-                <span>Ajustes</span>
-                <span class="text-purple-600">⚙️</span>
+            <!-- Quadradinho 2: Configurações Gerais e Ajustes do Mapa (Vertical Preto) -->
+            <div class="fullscreen-card-dark rounded-xl p-2.5 shadow-2xl border border-gray-700 flex flex-col gap-1.5 min-w-[135px]">
+              <div class="text-[10px] font-black text-gray-300 uppercase tracking-wider px-1 pb-1 border-b border-gray-800 flex items-center justify-between">
+                <span class="text-white">Ajustes</span>
+                <span class="text-purple-400">⚙️</span>
               </div>
               
               <div class="flex flex-col gap-1 text-xs">
-                <label class="flex items-center space-x-2 cursor-pointer font-bold text-black bg-gray-100 hover:bg-gray-200 px-2 py-1.5 rounded-lg transition-colors" title="Exibir ou ocultar divisões municipais">
-                  <input id="checkDivisoesFullscreen" type="checkbox" checked class="h-3.5 w-3.5 text-purple-600 rounded border-gray-300 focus:ring-purple-600" />
+                <label class="flex items-center space-x-2 cursor-pointer font-bold text-white bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 px-2 py-1.5 rounded-lg transition-colors" title="Exibir ou ocultar divisões municipais">
+                  <input id="checkDivisoesFullscreen" type="checkbox" checked class="h-3.5 w-3.5 text-purple-600 rounded border-gray-500 focus:ring-purple-600 bg-zinc-800" />
                   <span>Divisões</span>
                 </label>
 
-                <label class="flex items-center space-x-2 cursor-pointer font-bold text-black bg-gray-100 hover:bg-gray-200 px-2 py-1.5 rounded-lg transition-colors" title="Exibir ou ocultar rótulos">
-                  <input id="checkRotulosFullscreen" type="checkbox" checked class="h-3.5 w-3.5 text-purple-600 rounded border-gray-300 focus:ring-purple-600" />
+                <label class="flex items-center space-x-2 cursor-pointer font-bold text-white bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 px-2 py-1.5 rounded-lg transition-colors" title="Exibir ou ocultar rótulos">
+                  <input id="checkRotulosFullscreen" type="checkbox" checked class="h-3.5 w-3.5 text-purple-600 rounded border-gray-500 focus:ring-purple-600 bg-zinc-800" />
                   <span>Rótulos</span>
                 </label>
 
-                <button id="btnResetZoomFullscreen" title="Reenquadrar visão do Estado" class="w-full text-left px-2 py-1.5 text-black font-bold hover:bg-gray-100 rounded-lg transition-colors flex items-center gap-1.5 border border-gray-200">
-                  <svg class="w-3.5 h-3.5 text-gray-700 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <button id="btnResetZoomFullscreen" title="Reenquadrar visão do Estado" class="w-full text-left px-2 py-1.5 text-white font-bold bg-zinc-900 hover:bg-zinc-800 rounded-lg transition-colors flex items-center gap-1.5 border border-zinc-700">
+                  <svg class="w-3.5 h-3.5 text-purple-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
                   </svg>
                   <span>Enquadrar</span>
                 </button>
 
-                <button id="btnExitFullScreenFloating" class="w-full btn-purple-primary font-bold px-2 py-1.5 rounded-lg text-xs flex items-center justify-center gap-1.5 shadow-sm mt-0.5">
+                <button id="btnExitFullScreenFloating" class="w-full btn-purple-primary font-black px-2.5 py-1.5 rounded-lg text-xs flex items-center justify-center gap-1.5 shadow-md mt-1 border border-purple-400">
                   <svg class="w-3.5 h-3.5 text-white flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                   </svg>
-                  <span>Sair da Tela Cheia</span>
+                  <span>Sair Tela Cheia</span>
                 </button>
               </div>
             </div>
 
           </div>
 
-          <!-- Legenda Discreta no Canto Inferior Esquerdo -->
-          <div class="no-export absolute bottom-3 left-3 z-20 bg-gray-900 bg-opacity-90 text-white text-[11px] px-3 py-1.5 rounded-lg backdrop-filter blur-sm border border-gray-700 pointer-events-none flex flex-wrap items-center gap-2.5">
-            <div class="flex items-center gap-1">
-              <span class="w-2.5 h-2.5 rounded-full bg-purple-500 border border-purple-300 inline-block"></span>
-              <span>Borda Estado</span>
+          <!-- Legenda com Fundo Branco, Letras Pretas e Borda Roxa em Volta -->
+          <div class="no-export absolute bottom-3 left-3 z-20 bg-white/95 text-black text-[11px] font-bold px-3 py-1.5 rounded-lg shadow-lg border-2 border-purple-600 backdrop-blur-sm pointer-events-none flex flex-wrap items-center gap-3">
+            <div class="flex items-center gap-1.5">
+              <span class="w-2.5 h-2.5 rounded-full bg-purple-600 border border-purple-400 inline-block flex-shrink-0"></span>
+              <span class="text-black font-black">Borda Estado</span>
             </div>
-            <div class="flex items-center gap-1">
-              <span class="w-2.5 h-2.5 rounded-sm bg-cyan-400 border border-cyan-200 inline-block"></span>
-              <span>Divisões de Cidades</span>
+            <div class="flex items-center gap-1.5">
+              <span class="w-2.5 h-2.5 rounded-sm bg-cyan-500 border border-cyan-700 inline-block flex-shrink-0"></span>
+              <span class="text-black font-black">Divisões de Cidades</span>
             </div>
-            <div class="flex items-center gap-1">
-              <span class="w-2.5 h-2.5 rounded-full bg-amber-400 border border-amber-200 inline-block"></span>
-              <span>Edição</span>
+            <div class="flex items-center gap-1.5">
+              <span class="w-2.5 h-2.5 rounded-full bg-amber-500 border border-amber-600 inline-block flex-shrink-0"></span>
+              <span class="text-black font-black">Edição</span>
             </div>
           </div>
         </div>
