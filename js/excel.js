@@ -212,7 +212,429 @@ const ExcelManager = (() => {
    * - Folha 1: Mapa do Estado com números e malhas coloridas
    * - Folha 2: Resumo e Legenda Executiva (Nº, Cor preenchida, Município, Marca e Representante)
    */
-  async function generatePdfReport(mapDataUrl, mapWidth, mapHeight, stateInfo, itensCadastrados) {
+  function getCorNome(hex) {
+    if (!hex) return 'padrão';
+    const clean = hex.toLowerCase().trim();
+    const map = {
+      '#eab308': 'amarelo',
+      '#facc15': 'amarelo',
+      '#f59e0b': 'amarelo ouro',
+      '#6b7280': 'cinza',
+      '#94a3b8': 'cinza claro',
+      '#64748b': 'cinza ardósia',
+      '#3b82f6': 'azul',
+      '#2563eb': 'azul real',
+      '#10b981': 'verde',
+      '#059669': 'verde esmeralda',
+      '#8b5cf6': 'violeta',
+      '#7c3aed': 'roxo',
+      '#ec4899': 'rosa',
+      '#ef4444': 'vermelho',
+      '#dc2626': 'vermelho carmesim',
+      '#f97316': 'laranja',
+      '#14b8a6': 'turquesa',
+      '#06b6d4': 'ciano'
+    };
+    if (map[clean]) return map[clean];
+
+    const rgb = hexToRgb(clean);
+    const { r, g, b } = rgb;
+    if (r > 200 && g > 180 && b < 100) return 'amarelo';
+    if (r > 200 && g < 100 && b < 100) return 'vermelho';
+    if (r < 100 && g > 180 && b < 100) return 'verde';
+    if (r < 100 && g < 100 && b > 200) return 'azul';
+    if (r > 150 && g < 100 && b > 150) return 'roxo';
+    if (r > 200 && g > 100 && b < 60) return 'laranja';
+    if (Math.abs(r - g) < 25 && Math.abs(g - b) < 25) return 'cinza';
+    return clean;
+  }
+
+  function drawFeatureGeometry(ctx, geometry, project) {
+    if (!geometry) return;
+    ctx.beginPath();
+    if (geometry.type === 'Polygon') {
+      geometry.coordinates.forEach(ring => {
+        ring.forEach(([lng, lat], i) => {
+          const [px, py] = project(lng, lat);
+          if (i === 0) ctx.moveTo(px, py);
+          else ctx.lineTo(px, py);
+        });
+        ctx.closePath();
+      });
+    } else if (geometry.type === 'MultiPolygon') {
+      geometry.coordinates.forEach(poly => {
+        poly.forEach(ring => {
+          ring.forEach(([lng, lat], i) => {
+            const [px, py] = project(lng, lat);
+            if (i === 0) ctx.moveTo(px, py);
+            else ctx.lineTo(px, py);
+          });
+          ctx.closePath();
+        });
+      });
+    }
+  }
+
+  function getLargestRing(geometry) {
+    if (!geometry) return null;
+    if (geometry.type === 'Polygon') {
+      return geometry.coordinates[0] || null;
+    }
+    if (geometry.type === 'MultiPolygon') {
+      let maxArea = -1;
+      let bestRing = null;
+      geometry.coordinates.forEach(poly => {
+        const ring = poly[0];
+        if (ring && ring.length >= 3) {
+          let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+          ring.forEach(([x, y]) => {
+            if (x < minX) minX = x;
+            if (x > maxX) maxX = x;
+            if (y < minY) minY = y;
+            if (y > maxY) maxY = y;
+          });
+          const approx = (maxX - minX) * (maxY - minY);
+          if (approx > maxArea) {
+            maxArea = approx;
+            bestRing = ring;
+          }
+        }
+      });
+      return bestRing;
+    }
+    return null;
+  }
+
+  function getRingCentroid(ring, project) {
+    if (!ring || ring.length < 3) return null;
+    let area = 0, cx = 0, cy = 0;
+    for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+      const [x0, y0] = project(ring[j][0], ring[j][1]);
+      const [x1, y1] = project(ring[i][0], ring[i][1]);
+      const f = (x0 * y1 - x1 * y0);
+      area += f;
+      cx += (x0 + x1) * f;
+      cy += (y0 + y1) * f;
+    }
+    area = area * 0.5;
+    if (Math.abs(area) > 1e-4) {
+      return { x: cx / (6 * area), y: cy / (6 * area) };
+    }
+    let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+    ring.forEach(([lng, lat]) => {
+      const [px, py] = project(lng, lat);
+      if (px < minX) minX = px;
+      if (px > maxX) maxX = px;
+      if (py < minY) minY = py;
+      if (py > maxY) maxY = py;
+    });
+    return { x: (minX + maxX) / 2, y: (minY + maxY) / 2 };
+  }
+
+  function drawRoundedRect(ctx, x, y, width, height, radius) {
+    ctx.beginPath();
+    ctx.moveTo(x + radius, y);
+    ctx.lineTo(x + width - radius, y);
+    ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+    ctx.lineTo(x + width, y + height - radius);
+    ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+    ctx.lineTo(x + radius, y + height);
+    ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+    ctx.lineTo(x, y + radius);
+    ctx.quadraticCurveTo(x, y, x + radius, y);
+    ctx.closePath();
+  }
+
+  /**
+   * Renderiza o Mapa Vetorial Executivo em Alta Definição (Canvas 2400x1500)
+   * Segue as diretrizes estritas de Geomarketing Corporativo:
+   * - Fundo limpo (#FFFFFF)
+   * - Cidades "Fora da lista": Preenchimento branco e contorno cinza suave
+   * - Cidades com Representante: Preenchimento com a cor institucional e contorno nítido
+   * - Numeração proporcional e centralizada nos centróides das cidades
+   * - Destaque (Callouts/Tags) para representantes com poucas cidades
+   * - Indicador de Norte cartográfico (N ↑) no canto superior direito
+   */
+  async function renderExecutiveVectorMap(malhaMunicipios, itensCadastrados, estadoInfo, todosMunicipios) {
+    if (!malhaMunicipios || !malhaMunicipios.features) {
+      throw new Error('Malha municipal do estado não disponível para renderização vetorial.');
+    }
+
+    // 1. Mapeamento de itens por cidade (código IBGE)
+    const itensPorCidade = new Map();
+    itensCadastrados.forEach(it => {
+      const cod = String(it.municipioId);
+      if (!itensPorCidade.has(cod)) {
+        itensPorCidade.set(cod, []);
+      }
+      itensPorCidade.get(cod).push(it);
+    });
+
+    // 2. Agrupamento por representante
+    const repMap = new Map();
+    itensCadastrados.forEach(it => {
+      const repKey = (it.representante || 'Sem Representante').trim();
+      if (!repMap.has(repKey)) {
+        repMap.set(repKey, {
+          nome: repKey,
+          cor: it.cor || '#6B7280',
+          corNome: getCorNome(it.cor),
+          cidades: new Map()
+        });
+      }
+      const g = repMap.get(repKey);
+      const cod = String(it.municipioId);
+      if (!g.cidades.has(cod)) {
+        g.cidades.set(cod, {
+          id: it.municipioId,
+          nome: it.municipioNome,
+          codarea: cod,
+          cor: it.cor || '#6B7280'
+        });
+      }
+    });
+
+    const repGroups = Array.from(repMap.values()).map(g => {
+      const cidadesArr = Array.from(g.cidades.values());
+      cidadesArr.sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
+      return {
+        ...g,
+        cidades: cidadesArr
+      };
+    });
+
+    // 3. Atribuição de numeração ou callouts
+    const cityVisualMap = new Map();
+
+    repGroups.forEach(rg => {
+      if (rg.cidades.length > 6) {
+        rg.cidades.forEach((c, idx) => {
+          c.num = idx + 1;
+          cityVisualMap.set(c.codarea, {
+            num: idx + 1,
+            isCallout: false,
+            text: String(idx + 1),
+            cor: rg.cor
+          });
+        });
+      } else {
+        rg.cidades.forEach((c) => {
+          cityVisualMap.set(c.codarea, {
+            num: null,
+            isCallout: true,
+            text: c.nome,
+            cor: rg.cor
+          });
+        });
+      }
+    });
+
+    const totalMunicipiosEstado = malhaMunicipios.features.length;
+    const totalAtendidos = itensPorCidade.size;
+    const totalForaDaLista = Math.max(0, totalMunicipiosEstado - totalAtendidos);
+
+    const marcasSet = new Set(itensCadastrados.map(it => it.marcaNome).filter(Boolean));
+    const marcasTexto = Array.from(marcasSet).join(' e ');
+
+    // 4. Criação do Canvas Offscreen de Alta Resolução (2400 x 1500)
+    const canvas = document.createElement('canvas');
+    canvas.width = 2400;
+    canvas.height = 1500;
+    const ctx = canvas.getContext('2d');
+
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // 5. Bounding Box geográfico
+    let minLng = Infinity, maxLng = -Infinity, minLat = Infinity, maxLat = -Infinity;
+
+    function processCoords(coords) {
+      if (typeof coords[0] === 'number') {
+        const [lng, lat] = coords;
+        if (lng < minLng) minLng = lng;
+        if (lng > maxLng) maxLng = lng;
+        if (lat < minLat) minLat = lat;
+        if (lat > maxLat) maxLat = lat;
+      } else {
+        coords.forEach(processCoords);
+      }
+    }
+
+    malhaMunicipios.features.forEach(f => {
+      if (f.geometry && f.geometry.coordinates) {
+        processCoords(f.geometry.coordinates);
+      }
+    });
+
+    if (!isFinite(minLng) || !isFinite(maxLng)) {
+      minLng = -50; maxLng = -40; minLat = -15; maxLat = -5;
+    }
+
+    const midLat = (minLat + maxLat) / 2;
+    const cosLat = Math.cos((midLat * Math.PI) / 180);
+
+    const padX = 160;
+    const padY = 130;
+    const availW = canvas.width - padX * 2;
+    const availH = canvas.height - padY * 2;
+
+    const deltaX = (maxLng - minLng) * cosLat;
+    const deltaY = (maxLat - minLat);
+
+    const scale = Math.min(availW / deltaX, availH / deltaY);
+    const renderW = deltaX * scale;
+    const renderH = deltaY * scale;
+
+    const offsetX = padX + (availW - renderW) / 2;
+    const offsetY = padY + (availH - renderH) / 2;
+
+    function project(lng, lat) {
+      const x = offsetX + (lng - minLng) * cosLat * scale;
+      const y = offsetY + (maxLat - lat) * scale;
+      return [x, y];
+    }
+
+    // 6. Desenho das geometrias
+    // Passo 1: Cidades Fora da Lista
+    malhaMunicipios.features.forEach(f => {
+      const cod = String(f.properties ? (f.properties.codarea || f.id || '') : '');
+      if (itensPorCidade.has(cod)) return;
+
+      ctx.save();
+      drawFeatureGeometry(ctx, f.geometry, project);
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fill('evenodd');
+      ctx.strokeStyle = '#CBD5E1';
+      ctx.lineWidth = 1.3;
+      ctx.stroke();
+      ctx.restore();
+    });
+
+    // Passo 2: Cidades Atendidas
+    const centroidsList = [];
+
+    malhaMunicipios.features.forEach(f => {
+      const cod = String(f.properties ? (f.properties.codarea || f.id || '') : '');
+      const itens = itensPorCidade.get(cod);
+      if (!itens) return;
+
+      const cor = itens[0].cor || '#6B7280';
+      ctx.save();
+      drawFeatureGeometry(ctx, f.geometry, project);
+      ctx.fillStyle = cor;
+      ctx.fill('evenodd');
+      ctx.strokeStyle = '#334155';
+      ctx.lineWidth = 1.8;
+      ctx.stroke();
+      ctx.restore();
+
+      const ring = getLargestRing(f.geometry);
+      if (ring) {
+        const c = getRingCentroid(ring, project);
+        if (c) {
+          centroidsList.push({
+            cod,
+            x: c.x,
+            y: c.y,
+            cor,
+            visual: cityVisualMap.get(cod)
+          });
+        }
+      }
+    });
+
+    // Passo 3: Números ou Callouts
+    centroidsList.forEach(item => {
+      if (!item.visual) return;
+
+      if (!item.visual.isCallout) {
+        const numText = String(item.visual.num);
+        const isDark = isDarkColor(item.cor);
+
+        ctx.save();
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.font = numText.length > 2 
+          ? 'bold 13px Helvetica, Arial, sans-serif'
+          : 'bold 15px Helvetica, Arial, sans-serif';
+
+        ctx.shadowColor = isDark ? 'rgba(0, 0, 0, 0.6)' : 'rgba(255, 255, 255, 0.8)';
+        ctx.shadowBlur = 3;
+        ctx.fillStyle = isDark ? '#FFFFFF' : '#0F172A';
+        ctx.fillText(numText, item.x, item.y);
+        ctx.restore();
+
+      } else {
+        const labelText = item.visual.text;
+        ctx.save();
+        ctx.font = 'bold 14px Helvetica, Arial, sans-serif';
+        const textW = ctx.measureText(labelText).width;
+        const boxW = textW + 16;
+        const boxH = 24;
+
+        ctx.fillStyle = '#FEF08A';
+        ctx.strokeStyle = '#CA8A04';
+        ctx.lineWidth = 1.5;
+
+        drawRoundedRect(ctx, item.x - boxW / 2, item.y - boxH / 2, boxW, boxH, 4);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.fillStyle = '#0F172A';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(labelText, item.x, item.y);
+        ctx.restore();
+      }
+    });
+
+    // Passo 4: Indicador de Norte Cartográfico
+    ctx.save();
+    const northX = canvas.width - 130;
+    const northY = 110;
+
+    ctx.fillStyle = '#0F172A';
+    ctx.font = 'bold 22px Helvetica, Arial, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('N', northX, northY);
+
+    ctx.beginPath();
+    ctx.moveTo(northX, northY + 8);
+    ctx.lineTo(northX, northY + 54);
+    ctx.strokeStyle = '#0F172A';
+    ctx.lineWidth = 2.5;
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(northX - 6, northY + 20);
+    ctx.lineTo(northX, northY + 8);
+    ctx.lineTo(northX + 6, northY + 20);
+    ctx.fillStyle = '#0F172A';
+    ctx.fill();
+    ctx.restore();
+
+    const dataUrl = canvas.toDataURL('image/png');
+    const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+
+    return {
+      blob,
+      dataUrl,
+      width: canvas.width,
+      height: canvas.height,
+      repGroups,
+      totalMunicipiosEstado,
+      totalAtendidos,
+      totalForaDaLista,
+      marcasTexto
+    };
+  }
+
+  /**
+   * Gera o Relatório Executivo em PDF com 2 Páginas no Padrão Geomarketing Corporativo:
+   * - Folha 1: Mapa Territorial Vetorial Limpo com Numeração e Legenda Executiva
+   * - Folha 2: Relação Toponímica de Municípios em 4 Colunas e Validação da Base
+   */
+  async function generatePdfReport(vectorMapResult, stateInfo, itensCadastrados, todosMunicipios) {
     if (!window.jspdf || !window.jspdf.jsPDF) {
       throw new Error('Biblioteca jsPDF não carregada.');
     }
@@ -227,158 +649,157 @@ const ExcelManager = (() => {
     const pageWidth = doc.internal.pageSize.getWidth();   // 297 mm
     const pageHeight = doc.internal.pageSize.getHeight(); // 210 mm
     const today = new Date().toLocaleDateString('pt-BR');
-    const now = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
-    const estadoNome = stateInfo ? `${stateInfo.nome} (${stateInfo.sigla})` : 'Brasil';
-    const totalCidades = new Set(itensCadastrados.map(it => String(it.municipioId))).size;
-    const totalReps = new Set(itensCadastrados.map(it => it.representante.toLowerCase())).size;
+    const estadoNome = stateInfo ? stateInfo.nome : 'ESTADO';
+    const repGroups = (vectorMapResult && vectorMapResult.repGroups) ? vectorMapResult.repGroups : [];
+    const totalForaDaLista = (vectorMapResult && vectorMapResult.totalForaDaLista !== undefined) ? vectorMapResult.totalForaDaLista : 0;
+    const totalAtendidos = (vectorMapResult && vectorMapResult.totalAtendidos !== undefined) ? vectorMapResult.totalAtendidos : itensCadastrados.length;
+    const marcasTexto = (vectorMapResult && vectorMapResult.marcasTexto) ? vectorMapResult.marcasTexto : '';
 
     // ==========================================
-    // FOLHA 1: MAPA COLORIDO DO ESTADO
+    // FOLHA 1: MAPA EXECUTIVO
     // ==========================================
-    doc.setFillColor(76, 29, 149); // Roxo Corporativo (#4C1D95)
-    doc.rect(0, 0, pageWidth, 28, 'F');
+    doc.setFillColor(255, 255, 255);
+    doc.rect(0, 0, pageWidth, pageHeight, 'F');
 
-    // Título Superior
-    doc.setTextColor(255, 255, 255);
+    // Título Principal
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(15);
-    doc.text('GESTOR DE REPRESENTANTES - MAPA TERRITORIAL', 14, 12);
+    doc.setFontSize(22);
+    doc.setTextColor(15, 23, 42); // Navy Corporativo #0F172A
+    doc.text(estadoNome.toUpperCase(), 16, 18);
 
     // Subtítulo
     doc.setFont('helvetica', 'normal');
-    doc.setFontSize(9.5);
-    doc.setTextColor(237, 233, 254);
-    doc.text(`Estado: ${estadoNome}  |  Emissão: ${today} às ${now}`, 14, 21);
+    doc.setFontSize(10.5);
+    doc.setTextColor(100, 116, 139); // Slate #64748B
+    const sub = 'Divisão de atendimento comercial' + (marcasTexto ? ' | ' + marcasTexto : '');
+    doc.text(sub, 16, 25);
 
-    // Métricas no canto direito
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(9.5);
-    doc.setTextColor(255, 255, 255);
-    doc.text(`Municípios Cadastrados: ${totalCidades}   |   Representantes: ${totalReps}`, pageWidth - 14, 16, { align: 'right' });
-
-    // Enquadramento Seguro da Imagem do Mapa na Folha 1
-    const maxW = 269;
-    const maxH = 162;
-    const safeW = (Number(mapWidth) > 0) ? Number(mapWidth) : 1600;
-    const safeH = (Number(mapHeight) > 0) ? Number(mapHeight) : 1000;
-    const imgRatio = safeW / safeH;
-
-    let renderW = maxW;
-    let renderH = maxW / imgRatio;
-    if (renderH > maxH) {
-      renderH = maxH;
-      renderW = maxH * imgRatio;
-    }
-    if (!isFinite(renderW) || renderW <= 0) renderW = maxW;
-    if (!isFinite(renderH) || renderH <= 0) renderH = maxH;
-
-    const posX = (pageWidth - renderW) / 2;
-    const posY = 33 + (maxH - renderH) / 2;
-
-    if (isFinite(posX) && isFinite(posY) && isFinite(renderW) && isFinite(renderH)) {
-      doc.setDrawColor(221, 214, 254);
-      doc.setLineWidth(0.4);
-      doc.rect(posX - 0.5, posY - 0.5, renderW + 1, renderH + 1);
+    // Imagem do Mapa Vetorial de Alta Resolução
+    if (vectorMapResult && vectorMapResult.dataUrl) {
+      doc.addImage(vectorMapResult.dataUrl, 'PNG', 16, 28, 265, 148);
     }
 
-    if (mapDataUrl && typeof mapDataUrl === 'string' && mapDataUrl.startsWith('data:image/')) {
-      doc.addImage(mapDataUrl, 'PNG', posX, posY, renderW, renderH);
-    }
+    // Legenda no rodapé da Página 1
+    const legendY = 182;
+    let currX = 16;
 
-    // Rodapé Folha 1
-    doc.setFontSize(8);
-    doc.setTextColor(148, 163, 184);
-    doc.text('Documento Oficial de Distribuição Comercial  |  Página 1 de 2', 14, 204);
+    repGroups.forEach(rep => {
+      const rgb = hexToRgb(rep.cor);
+      doc.setFillColor(rgb.r, rgb.g, rgb.b);
+      doc.rect(currX, legendY - 3.5, 7.5, 4.5, 'F');
+      doc.setDrawColor(148, 163, 184);
+      doc.setLineWidth(0.2);
+      doc.rect(currX, legendY - 3.5, 7.5, 4.5, 'D');
 
-    // ==========================================
-    // FOLHA 2: RESUMO EXECUTIVO E LEGENDA
-    // ==========================================
-    doc.addPage('a4', 'landscape');
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(9);
+      doc.setTextColor(15, 23, 42);
+      const repLabel = `${rep.nome} · ${rep.cidades.length} cidades`;
+      doc.text(repLabel, currX + 9.5, legendY);
 
-    // Cabeçalho Folha 2
-    doc.setFillColor(76, 29, 149);
-    doc.rect(0, 0, pageWidth, 28, 'F');
+      const strW = doc.getTextWidth(repLabel);
+      currX += 9.5 + strW + 10;
+    });
 
-    doc.setTextColor(255, 255, 255);
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(15);
-    doc.text('LEGENDA E RESUMO EXECUTIVO DOS REPRESENTANTES', 14, 12);
+    // Amostra "Fora da lista"
+    doc.setFillColor(255, 255, 255);
+    doc.rect(currX, legendY - 3.5, 7.5, 4.5, 'F');
+    doc.setDrawColor(148, 163, 184);
+    doc.setLineWidth(0.2);
+    doc.rect(currX, legendY - 3.5, 7.5, 4.5, 'D');
 
     doc.setFont('helvetica', 'normal');
-    doc.setFontSize(9.5);
-    doc.setTextColor(237, 233, 254);
-    doc.text(`Relação detalhada dos municípios cadastrados, marcas e representantes  |  Estado: ${estadoNome}`, 14, 21);
+    doc.setFontSize(9);
+    doc.setTextColor(15, 23, 42);
+    const foraLabel = `Fora da lista · ${totalForaDaLista} cidades`;
+    doc.text(foraLabel, currX + 9.5, legendY);
 
-    // Tabela Executiva
-    const tableData = [...itensCadastrados]
-      .sort((a, b) => a.seqId - b.seqId)
-      .map(it => [
-        `Nº ${it.seqId}`,
-        it.cor, // Hex usado no didDrawCell para desenhar o quadrado colorido
-        it.estadoSigla,
-        it.municipioNome,
-        it.marcaNome,
-        it.representante
-      ]);
+    // Nota explicativa
+    const repComNumeros = repGroups.find(r => r.cidades.length > 6);
+    const textoNota = repComNumeros
+      ? `Os números identificam as cidades de ${repComNumeros.nome} na relação da página 2.`
+      : 'Os números identificam as cidades na relação da página 2.';
 
-    doc.autoTable({
-      startY: 34,
-      margin: { left: 14, right: 14 },
-      head: [['Nº', 'Cor', 'Estado', 'Município', 'Marca', 'Representante']],
-      body: tableData,
-      theme: 'striped',
-      headStyles: {
-        fillColor: [109, 40, 217], // Roxo #6D28D9
-        textColor: [255, 255, 255],
-        fontStyle: 'bold',
-        halign: 'center',
-        fontSize: 9
-      },
-      bodyStyles: {
-        fontSize: 8.5,
-        textColor: [0, 0, 0],
-        valign: 'middle',
-        halign: 'center'
-      },
-      columnStyles: {
-        0: { halign: 'center', cellWidth: 20, fontStyle: 'bold' },
-        1: { halign: 'center', cellWidth: 20 },
-        2: { halign: 'center', cellWidth: 22 },
-        3: { halign: 'center', cellWidth: 65, fontStyle: 'bold' },
-        4: { halign: 'center', cellWidth: 44 },
-        5: { halign: 'center', cellWidth: 80 }
-      },
-      didParseCell: function (data) {
-        if (data.section === 'body' && data.column.index === 1) {
-          // Limpa o texto da célula para NÃO exibir o código hexadecimal atrás do quadrado de cor
-          data.cell.text = [];
-        }
-      },
-      didDrawCell: function (data) {
-        if (data.section === 'body' && data.column.index === 1) {
-          const hex = data.cell.raw;
-          if (hex && typeof hex === 'string') {
-            const rgb = hexToRgb(hex);
-            doc.setFillColor(rgb.r, rgb.g, rgb.b);
-            doc.setDrawColor(76, 29, 149);
-            doc.setLineWidth(0.3);
-            const size = 5.5;
-            const x = data.cell.x + (data.cell.width - size) / 2;
-            const y = data.cell.y + (data.cell.height - size) / 2;
-            if (isFinite(x) && isFinite(y) && isFinite(size)) {
-              doc.roundedRect(x, y, size, size, 1, 1, 'FD');
-            }
-          }
-        }
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8.5);
+    doc.setTextColor(71, 85, 105);
+    doc.text(textoNota, 16, 191);
+
+    // Rodapé de fontes cartográficas
+    doc.setFontSize(7.5);
+    doc.setTextColor(148, 163, 184);
+    doc.text(`Fonte territorial: IBGE, API de Malhas (simplificada). Atendimento: planilha fornecida. | Elaborado em ${today}`, 16, 199);
+
+    // ==========================================
+    // FOLHA 2: RELAÇÃO DE MUNICÍPIOS
+    // ==========================================
+    doc.addPage('a4', 'landscape');
+    doc.setFillColor(255, 255, 255);
+    doc.rect(0, 0, pageWidth, pageHeight, 'F');
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(18);
+    doc.setTextColor(15, 23, 42);
+    doc.text('RELAÇÃO DE MUNICÍPIOS', 16, 18);
+
+    let yPos = 28;
+
+    repGroups.forEach(rep => {
+      if (yPos > 180) {
+        doc.addPage('a4', 'landscape');
+        yPos = 20;
+      }
+
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(11);
+      doc.setTextColor(15, 23, 42);
+
+      const hasNumbers = rep.cidades.length > 6;
+      const titleRep = `${rep.nome} · ${rep.corNome}${hasNumbers ? ' | Numeração correspondente ao mapa' : ''}`;
+      doc.text(titleRep, 16, yPos);
+      yPos += 5.5;
+
+      if (!hasNumbers) {
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(9.5);
+        doc.setTextColor(51, 65, 85);
+        const line = rep.cidades.map(c => c.nome).join('   •   ');
+        doc.text(line, 16, yPos);
+        yPos += 11;
+
+      } else {
+        const colWidth = 66;
+        const rows = Math.ceil(rep.cidades.length / 4);
+
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(8.5);
+        doc.setTextColor(30, 41, 59);
+
+        rep.cidades.forEach((city, idx) => {
+          const col = Math.floor(idx / rows);
+          const row = idx % rows;
+          const cx = 16 + col * colWidth;
+          const cy = yPos + row * 4.4;
+
+          const numStr = String(city.num || idx + 1).padStart(3, '0');
+          doc.text(`${numStr}  ${city.nome}`, cx, cy);
+        });
+
+        yPos += rows * 4.4 + 9;
       }
     });
 
-    // Rodapé Folha 2
-    const finalY = doc.internal.pageSize.getHeight() - 6;
+    const validacaoY = Math.max(yPos + 4, 191);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9.5);
+    doc.setTextColor(15, 23, 42);
+    doc.text('Validação da base', 16, validacaoY);
+
+    doc.setFont('helvetica', 'normal');
     doc.setFontSize(8);
-    doc.setTextColor(148, 163, 184);
-    doc.text('Documento Oficial de Distribuição Comercial  |  Página 2 de 2', 14, finalY);
+    doc.setTextColor(100, 116, 139);
+    doc.text(`${totalAtendidos} municípios únicos da lista localizados no mapa. Municípios em branco não tiveram atendimento atribuído.`, 16, validacaoY + 5);
 
     return doc.output('blob');
   }
@@ -409,6 +830,7 @@ const ExcelManager = (() => {
     downloadTemplate,
     readImportFile,
     generateStyledExcelBuffer,
+    renderExecutiveVectorMap,
     generatePdfReport,
     downloadZipPackage
   };

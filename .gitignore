@@ -1,0 +1,7 @@
+# Arquivo interno de diretrizes de geomarketing corporativo
+PADROES_RELATORIO_GEOMARKETING.md
+
+# Logs e arquivos locais temporários
+*.log
+.DS_Store
+Thumbs.db

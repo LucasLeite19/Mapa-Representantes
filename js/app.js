@@ -522,6 +522,9 @@ const App = (() => {
         })
       ]);
 
+      state.malhaEstado = malhaEstado;
+      state.malhaMunicipios = malhaMunicipios;
+
       MapManager.setStateHighlight(malhaEstado, malhaMunicipios, municipiosMap, (clickedMunicipioId) => {
         if (selectMunicipio && clickedMunicipioId) {
           selectMunicipio.value = clickedMunicipioId;
@@ -1153,34 +1156,41 @@ const App = (() => {
 
     try {
       btn.classList.add('opacity-75', 'cursor-wait');
-      btnText.textContent = 'Enquadrando Estado e capturando foto...';
+      btnText.textContent = 'Renderizando mapa vetorial executivo...';
 
-      // 1. Foto do mapa: sempre enquadra o estado selecionado com precisão total
-      let targetBounds = state.estadoBounds;
-      if (!targetBounds && state.estadoSelecionado) {
-        targetBounds = IBGEService.getEstadoBounds(state.estadoSelecionado.sigla);
+      // 1. Obter ou carregar malhas municipais do estado
+      let malha = state.malhaMunicipios;
+      if (!malha && state.estadoSelecionado) {
+        malha = await IBGEService.getMalhaMunicipiosEstado(state.estadoSelecionado.sigla);
+        state.malhaMunicipios = malha;
       }
-      const captureResult = await MapManager.captureMapScreenshot(targetBounds);
 
-      // 2. Planilha Excel
-      btnText.textContent = 'Gerando planilha Excel...';
-      const excelBuffer = await ExcelManager.generateStyledExcelBuffer(state.itensCadastrados);
-
-      // 3. Relatório em PDF com 2 Folhas
-      btnText.textContent = 'Gerando PDF executivo (2 páginas)...';
-      const pdfBlob = await ExcelManager.generatePdfReport(
-        captureResult.dataUrl,
-        captureResult.width,
-        captureResult.height,
+      // 2. Renderização do mapa vetorial de alta definição para o geomarketing corporativo
+      const vectorMapResult = await ExcelManager.renderExecutiveVectorMap(
+        malha,
+        state.itensCadastrados,
         state.estadoSelecionado,
-        state.itensCadastrados
+        state.municipiosAtuais
       );
 
-      // 4. Compactação em .zip (PNG + XLSX + PDF)
-      btnText.textContent = 'Compactando arquivo .zip...';
-      await ExcelManager.downloadZipPackage(captureResult.blob, excelBuffer, pdfBlob);
+      // 3. Planilha Excel padronizada
+      btnText.textContent = 'Gerando planilha Excel padronizada...';
+      const excelBuffer = await ExcelManager.generateStyledExcelBuffer(state.itensCadastrados);
 
-      showToast('Pacote .zip gerado com sucesso (Imagem + Excel + PDF 2 Folhas)!', 'success');
+      // 4. Relatório Executivo em PDF de 2 Folhas (Padrão Corporativo de Geomarketing)
+      btnText.textContent = 'Gerando Relatório Executivo em PDF (2 páginas)...';
+      const pdfBlob = await ExcelManager.generatePdfReport(
+        vectorMapResult,
+        state.estadoSelecionado,
+        state.itensCadastrados,
+        state.municipiosAtuais
+      );
+
+      // 5. Compactação em .zip (Mapa Executivo PNG + Planilha Excel + Relatório PDF)
+      btnText.textContent = 'Compactando pacote .zip executivo...';
+      await ExcelManager.downloadZipPackage(vectorMapResult.blob, excelBuffer, pdfBlob);
+
+      showToast('Relatório Executivo gerado com sucesso (PDF Geomarketing + Mapa HD + Excel)!', 'success');
 
     } catch (err) {
       console.error(err);
