@@ -294,60 +294,67 @@
       <!-- Coluna da Direita: Mapa e Controles Separados em 2 Grupos Claros -->
       <div class="lg:col-span-8 flex flex-col space-y-3">
         
-        <!-- Barra de Ferramentas Superior do Mapa com 2 Grupos Distintos (Totalmente Responsiva) -->
-        <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2">
+        <!-- Barra de Ferramentas Superior do Mapa: Uma embaixo da outra, com quebra 2x2 sem rolagem -->
+        <div class="flex flex-col gap-2 w-full">
           
-          <!-- SUBDIVISÃO 1: Camadas do Mapa de Fundo -->
-          <div class="flex items-center space-x-1 sm:space-x-1.5 bg-white p-1 rounded-xl border border-gray-300 shadow-xs text-xs overflow-x-auto max-w-full">
-            <span class="text-gray-600 font-bold px-1.5 sm:px-2 py-1 flex-shrink-0">Camada:</span>
-            <button data-layer="esri" class="btn-tile-layer btn-tile-active px-2 sm:px-2.5 py-1 rounded-lg font-bold transition-all flex-shrink-0">
-              Satélite
-            </button>
-            <button data-layer="osm" class="btn-tile-layer btn-tile-inactive px-2 sm:px-2.5 py-1 rounded-lg font-bold transition-all flex-shrink-0">
-              OpenStreetMap
-            </button>
-            <button data-layer="google" class="btn-tile-layer btn-tile-inactive px-2 sm:px-2.5 py-1 rounded-lg font-bold transition-all flex-shrink-0">
-              Google Maps
-            </button>
-            <button data-layer="carto" class="btn-tile-layer btn-tile-inactive px-2 sm:px-2.5 py-1 rounded-lg font-bold transition-all flex-shrink-0">
-              CartoDB Light
-            </button>
+          <!-- LINHA 1: Camadas do Mapa de Fundo -->
+          <div class="bg-white p-2 rounded-xl border border-gray-300 shadow-xs flex flex-col sm:flex-row sm:items-center gap-1.5 w-full">
+            <span class="text-xs font-black text-black px-1 flex-shrink-0">
+              Camada:
+            </span>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-1.5 flex-1 w-full">
+              <button data-layer="esri" class="btn-tile-layer btn-tile-active py-2 px-2 text-center rounded-lg font-bold text-xs transition-all w-full flex items-center justify-center">
+                Satélite
+              </button>
+              <button data-layer="osm" class="btn-tile-layer btn-tile-inactive py-2 px-2 text-center rounded-lg font-bold text-xs transition-all w-full flex items-center justify-center">
+                OpenStreetMap
+              </button>
+              <button data-layer="google" class="btn-tile-layer btn-tile-inactive py-2 px-2 text-center rounded-lg font-bold text-xs transition-all w-full flex items-center justify-center">
+                Google Maps
+              </button>
+              <button data-layer="carto" class="btn-tile-layer btn-tile-inactive py-2 px-2 text-center rounded-lg font-bold text-xs transition-all w-full flex items-center justify-center">
+                CartoDB Light
+              </button>
+            </div>
           </div>
 
-          <!-- SUBDIVISÃO 2: Ajustes de Exibição & Tela Cheia (Separado e Independente) -->
-          <div class="flex items-center space-x-1.5 sm:space-x-2 bg-white p-1 rounded-xl border border-gray-300 shadow-xs text-xs overflow-x-auto max-w-full">
-            <span class="text-gray-600 font-bold px-1.5 sm:px-2 py-1 flex-shrink-0">Ajustes:</span>
-            
-            <!-- Checkbox de Divisões Municipais -->
-            <label class="flex items-center space-x-1.5 cursor-pointer font-bold text-black bg-gray-100 hover:bg-gray-200 px-2 sm:px-2.5 py-1 rounded-lg transition-colors flex-shrink-0">
-              <input id="checkDivisoesCidades" type="checkbox" checked class="h-3.5 w-3.5 text-purple-600 rounded border-gray-300 focus:ring-purple-600" />
-              <span>Divisões</span>
-            </label>
+          <!-- LINHA 2: Ajustes de Exibição & Tela Cheia -->
+          <div class="bg-white p-2 rounded-xl border border-gray-300 shadow-xs flex flex-col sm:flex-row sm:items-center gap-1.5 w-full">
+            <span class="text-xs font-black text-black px-1 flex-shrink-0">
+              Ajustes:
+            </span>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-1.5 flex-1 w-full">
+              <!-- Checkbox de Divisões Municipais -->
+              <label class="flex items-center justify-center space-x-1.5 cursor-pointer font-bold text-black bg-gray-100 hover:bg-gray-200 py-2 px-2 rounded-lg transition-colors w-full text-xs">
+                <input id="checkDivisoesCidades" type="checkbox" checked class="h-3.5 w-3.5 text-purple-600 rounded border-gray-300 focus:ring-purple-600" />
+                <span class="truncate">Divisões</span>
+              </label>
 
-            <!-- Checkbox de Rótulos no Mapa -->
-            <label class="flex items-center space-x-1.5 cursor-pointer font-bold text-black bg-gray-100 hover:bg-gray-200 px-2 sm:px-2.5 py-1 rounded-lg transition-colors flex-shrink-0" title="Exibir ou ocultar os rótulos de município e representante sobre as cidades">
-              <input id="checkRotulosMapa" type="checkbox" checked class="h-3.5 w-3.5 text-purple-600 rounded border-gray-300 focus:ring-purple-600" />
-              <span>Rótulos</span>
-            </label>
+              <!-- Checkbox de Rótulos no Mapa -->
+              <label class="flex items-center justify-center space-x-1.5 cursor-pointer font-bold text-black bg-gray-100 hover:bg-gray-200 py-2 px-2 rounded-lg transition-colors w-full text-xs" title="Exibir ou ocultar os rótulos de município e representante sobre as cidades">
+                <input id="checkRotulosMapa" type="checkbox" checked class="h-3.5 w-3.5 text-purple-600 rounded border-gray-300 focus:ring-purple-600" />
+                <span class="truncate">Rótulos</span>
+              </label>
 
-            <!-- Botão Enquadrar Estado -->
-            <button id="btnResetZoom" title="Reenquadrar visão do Estado" class="px-2 sm:px-2.5 py-1 text-black font-bold hover:bg-gray-100 rounded-lg transition-colors flex items-center gap-1 border border-gray-200 flex-shrink-0">
-              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
-              </svg>
-              <span>Enquadrar</span>
-            </button>
+              <!-- Botão Enquadrar Estado -->
+              <button id="btnResetZoom" title="Reenquadrar visão do Estado" class="py-2 px-2 text-black font-bold hover:bg-gray-100 rounded-lg transition-colors flex items-center justify-center gap-1 border border-gray-200 w-full text-xs">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                </svg>
+                <span>Enquadrar</span>
+              </button>
 
-            <!-- Botão Tela Cheia -->
-            <button id="btnFullScreen" title="Alternar Tela Cheia" class="px-2 sm:px-2.5 py-1 text-black font-bold hover:bg-gray-100 rounded-lg transition-colors flex items-center gap-1 border border-gray-200 flex-shrink-0">
-              <svg id="iconExpand" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
-              </svg>
-              <svg id="iconCompress" class="w-3.5 h-3.5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-              <span id="textFullScreen">Tela Cheia</span>
-            </button>
+              <!-- Botão Tela Cheia -->
+              <button id="btnFullScreen" title="Alternar Tela Cheia" class="py-2 px-2 text-black font-bold hover:bg-gray-100 rounded-lg transition-colors flex items-center justify-center gap-1 border border-gray-200 w-full text-xs">
+                <svg id="iconExpand" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                </svg>
+                <svg id="iconCompress" class="w-3.5 h-3.5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+                <span id="textFullScreen">Tela Cheia</span>
+              </button>
+            </div>
           </div>
 
         </div>
