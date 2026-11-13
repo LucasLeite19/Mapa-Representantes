@@ -296,6 +296,17 @@
   justify-content: space-between !important;
 }
 
+/* Legenda do Mapa com Fundo 100% Branco Sólido e Alto Contraste */
+.map-legend-white {
+  background-color: #ffffff !important;
+  background: #ffffff !important;
+  border: 1px solid #d1d5db !important;
+  border-radius: 0.5rem !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25) !important;
+  color: #000000 !important;
+  padding: 4px 10px !important;
+}
+
 /* Scrollbars limpos */
 ::-webkit-scrollbar {
   width: 6px;
