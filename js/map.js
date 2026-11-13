@@ -1,12 +1,13 @@
 /**
  * MÓDULO: MAP MANAGER
  * Responsável pelo Leaflet, camadas de fundo (tiles),
- * destaque de Estado, divisão detalhada de municípios com interatividade (hover e clique),
- * renderização de malhas com suporte a múltiplas marcas (SVG stripes), rótulos centrais permanentes e exportação.
+ * divisões municipais em cores de alto contraste para todos os tipos de mapas,
+ * rótulos compactos iniciais (Município + Representante) e detalhamento completo no hover/clique.
  */
 
 const MapManager = (() => {
   let map = null;
+  let currentTileKey = 'esri';
   let currentTileLayer = null;
   let previewLayer = null;
   let isFullscreen = false;
@@ -61,6 +62,38 @@ const MapManager = (() => {
     }
   };
 
+  // Cores fortes e contrastantes das divisões municipais para cada tipo de mapa
+  const DIVISION_STYLES = {
+    esri: {
+      color: '#38BDF8',       // Azul Céu / Ciano vibrante - contraste altíssimo sobre Satélite escuro
+      weight: 1.25,
+      opacity: 0.85,
+      fillColor: '#38BDF8',
+      fillOpacity: 0.03
+    },
+    osm: {
+      color: '#1E3A8A',       // Azul Marinho Escuro - destaque nítido sobre OpenStreetMap claro
+      weight: 1.35,
+      opacity: 0.85,
+      fillColor: '#1E3A8A',
+      fillOpacity: 0.02
+    },
+    google: {
+      color: '#1E3A8A',       // Azul Marinho Escuro - destaque nítido sobre Google Maps
+      weight: 1.35,
+      opacity: 0.85,
+      fillColor: '#1E3A8A',
+      fillOpacity: 0.02
+    },
+    carto: {
+      color: '#0F172A',       // Slate Preto/Grafite Profundo - contraste total sobre CartoDB Light
+      weight: 1.4,
+      opacity: 0.9,
+      fillColor: '#0F172A',
+      fillOpacity: 0.02
+    }
+  };
+
   /**
    * Inicializa o Leaflet (SVG renderer para padrões dinâmicos)
    */
@@ -84,15 +117,18 @@ const MapManager = (() => {
     const config = TILE_PROVIDERS[providerKey];
     if (!config || !map) return;
 
+    currentTileKey = providerKey;
+
     if (currentTileLayer) {
       map.removeLayer(currentTileLayer);
     }
 
     currentTileLayer = L.tileLayer(config.url, config.options);
     currentTileLayer.addTo(map);
-
-    // Garante que o mapa base fique no fundo de todas as sobreposições
     currentTileLayer.bringToBack();
+
+    // Atualiza estilo das divisões municipais para a cor de alto contraste do mapa escolhido
+    applyDivisionStyle();
 
     document.querySelectorAll('.btn-tile-layer').forEach(btn => {
       if (btn.dataset.layer === providerKey) {
@@ -105,6 +141,12 @@ const MapManager = (() => {
     });
   }
 
+  function applyDivisionStyle() {
+    if (!municipalDivisionsLayer) return;
+    const style = DIVISION_STYLES[currentTileKey] || DIVISION_STYLES.esri;
+    municipalDivisionsLayer.setStyle(style);
+  }
+
   /**
    * Configura o DESTAQUE DO ESTADO e as DIVISÕES MUNICIPAIS DETALHADAS
    */
@@ -112,37 +154,31 @@ const MapManager = (() => {
     clearStateHighlight();
     if (!map) return;
 
-    // 1. Camada de Divisões Municipais (linhas finas de todas as cidades do estado)
+    const divStyle = DIVISION_STYLES[currentTileKey] || DIVISION_STYLES.esri;
+
+    // 1. Camada de Divisões Municipais
     if (municipalitiesGeoJson) {
       municipalDivisionsLayer = L.geoJSON(municipalitiesGeoJson, {
-        style: () => ({
-          color: '#FFFFFF',
-          weight: 0.9,
-          opacity: 0.7,
-          fillColor: '#4F46E5',
-          fillOpacity: 0.02
-        }),
+        style: () => ({ ...divStyle }),
         onEachFeature: (feature, layer) => {
           const codArea = String(feature.properties ? (feature.properties.codarea || '') : '');
           const nomeCidade = municipiosMap.get(codArea) || 'Município';
 
-          // Tooltip ao passar o mouse
+          // Tooltip ao passar o mouse sobre a cidade não cadastrada
           layer.bindTooltip(nomeCidade, {
             permanent: false,
             direction: 'center',
             className: 'city-hover-tooltip'
           });
 
-          // Efeitos de Hover
           layer.on('mouseover', () => {
-            // Se a cidade já estiver cadastrada com representantes, não sobrepõe estilo
             if (!cityLayersMap.has(codArea)) {
               layer.setStyle({
-                color: '#FBBF24',
-                weight: 2.2,
+                color: '#F59E0B',
+                weight: 2.5,
                 opacity: 1,
                 fillColor: '#F59E0B',
-                fillOpacity: 0.28
+                fillOpacity: 0.3
               });
               layer.bringToFront();
             }
@@ -154,7 +190,6 @@ const MapManager = (() => {
             }
           });
 
-          // Clique na cidade: seleciona automaticamente no formulário
           layer.on('click', () => {
             if (onCityClick && codArea) {
               onCityClick(codArea);
@@ -168,20 +203,19 @@ const MapManager = (() => {
       }
     }
 
-    // 2. Camada de Contorno Externo do Estado (Borda destacada e elegante)
+    // 2. Camada de Contorno Externo do Estado (Borda proeminente)
     if (stateBorderGeoJson) {
       stateBoundaryLayer = L.geoJSON(stateBorderGeoJson, {
         style: {
-          color: '#6366F1',       // Indigo destacado
-          weight: 3.5,
-          opacity: 0.95,
+          color: '#4F46E5',       // Indigo Forte
+          weight: 4,
+          opacity: 1,
           fill: false,
           interactive: false
         }
       }).addTo(map);
     }
 
-    // 3. Garante que os municípios já cadastrados fiquem sempre por cima das linhas do estado
     bringRegisteredCitiesToFront();
   }
 
@@ -203,6 +237,7 @@ const MapManager = (() => {
     if (showDivisions) {
       if (!map.hasLayer(municipalDivisionsLayer)) {
         municipalDivisionsLayer.addTo(map);
+        applyDivisionStyle();
         bringRegisteredCitiesToFront();
       }
     } else {
@@ -224,7 +259,7 @@ const MapManager = (() => {
   }
 
   /**
-   * Mostra contorno de preview com linha amarela pontilhada
+   * Preview com linha amarela pontilhada
    */
   function showPreview(geoJson) {
     clearPreview();
@@ -300,11 +335,29 @@ const MapManager = (() => {
     return `url(#${patternId})`;
   }
 
-  function buildTooltipHtml(cidadeNome, itensDaCidade) {
+  /**
+   * RÓTULO COMPACTO PERMANENTE: Apenas Município e Representante(s)
+   * Evita sobreposições e poluição visual no mapa
+   */
+  function buildCompactTooltipHtml(cidadeNome, itensDaCidade) {
+    const nomesReps = [...new Set(itensDaCidade.map(it => it.representante))].join(', ');
+    return `
+      <div class="rep-compact-label">
+        <span class="font-extrabold text-white text-[10px]">${escapeHtml(cidadeNome)}</span>
+        <span class="text-amber-300 font-bold text-[9px]">${escapeHtml(nomesReps)}</span>
+      </div>
+    `;
+  }
+
+  /**
+   * CARD DETALHADO (Exibido no HOVER ou no CLIQUE):
+   * Mostra todas as marcas, representantes, badges, números e cores
+   */
+  function buildDetailedCardHtml(cidadeNome, itensDaCidade) {
     let rowsHtml = '';
     itensDaCidade.forEach(it => {
       rowsHtml += `
-        <div class="flex items-center justify-between gap-2 py-0.5 border-b border-gray-700 last:border-0">
+        <div class="flex items-center justify-between gap-2 py-1 border-b border-gray-700 last:border-0">
           <div class="flex items-center gap-1.5 overflow-hidden">
             <span class="w-2.5 h-2.5 rounded-full flex-shrink-0" style="background-color: ${it.cor};"></span>
             <span class="rep-brand-badge brand-${it.marcaId || '1'}">${escapeHtml(it.marcaNome || 'Marca')}</span>
@@ -319,7 +372,7 @@ const MapManager = (() => {
       <div class="rep-marker-label">
         <div class="rep-marker-city-title flex items-center justify-between">
           <span>${escapeHtml(cidadeNome)}</span>
-          <span class="text-[9px] font-normal text-indigo-300 ml-2">(${itensDaCidade.length}/6 marcas)</span>
+          <span class="text-[9px] font-semibold text-indigo-300 ml-2">(${itensDaCidade.length}/6 marcas)</span>
         </div>
         <div class="flex flex-col gap-0.5">
           ${rowsHtml}
@@ -328,6 +381,11 @@ const MapManager = (() => {
     `;
   }
 
+  /**
+   * Adiciona ou atualiza a cidade no mapa
+   * - De início: exibe apenas Município e Representante compacto
+   * - No hover ou clique: exibe card detalhado com todas as marcas
+   */
   function syncMunicipalityLayer(municipioId, geoJson, itensDaCidade) {
     if (!map) return;
 
@@ -355,13 +413,6 @@ const MapManager = (() => {
         }
       });
 
-      layer.on('mouseover', () => {
-        layer.setStyle({ weight: 3.5, color: '#FFFFFF' });
-      });
-      layer.on('mouseout', () => {
-        layer.setStyle({ weight: 1.8, color: '#111827' });
-      });
-
       layer.addTo(map);
       layer.bringToFront();
 
@@ -372,6 +423,8 @@ const MapManager = (() => {
     }
 
     const layer = entry.layer;
+
+    // Pintura: sólida se 1 marca, listras se 2 a 6 marcas
     if (cores.length === 1) {
       layer.setStyle({
         fillColor: cores[0],
@@ -402,11 +455,43 @@ const MapManager = (() => {
       }
     }
 
+    // 1. Rótulo COMPACTO inicial (Município e Representante apenas)
     layer.unbindTooltip();
-    layer.bindTooltip(buildTooltipHtml(cidadeNome, itensDaCidade), {
+    layer.bindTooltip(buildCompactTooltipHtml(cidadeNome, itensDaCidade), {
       permanent: true,
       direction: 'center',
-      className: 'rep-custom-tooltip'
+      className: 'rep-compact-tooltip'
+    });
+
+    // 2. No HOVER: Transiciona para o card DETALHADO
+    layer.off('mouseover');
+    layer.on('mouseover', () => {
+      layer.setStyle({ weight: 3.5, color: '#FFFFFF' });
+      layer.unbindTooltip();
+      layer.bindTooltip(buildDetailedCardHtml(cidadeNome, entry.items), {
+        permanent: true,
+        direction: 'center',
+        className: 'rep-custom-tooltip'
+      }).openTooltip();
+    });
+
+    // Ao sair com o mouse: Retorna ao rótulo compacto
+    layer.off('mouseout');
+    layer.on('mouseout', () => {
+      layer.setStyle({ weight: 1.8, color: '#111827' });
+      layer.unbindTooltip();
+      layer.bindTooltip(buildCompactTooltipHtml(cidadeNome, entry.items), {
+        permanent: true,
+        direction: 'center',
+        className: 'rep-compact-tooltip'
+      }).openTooltip();
+    });
+
+    // 3. No CLIQUE: Abre Popup rico com todas as marcas e dados completos
+    layer.unbindPopup();
+    layer.bindPopup(buildDetailedCardHtml(cidadeNome, itensDaCidade), {
+      className: 'rep-detailed-popup',
+      autoPan: true
     });
 
     layer.bringToFront();
