@@ -277,6 +277,19 @@ const App = (() => {
     // Busca Rápida na Tabela
     document.getElementById('inputBuscaTabela').addEventListener('input', renderTabela);
 
+    // Alteração dinâmica de cor do representante (no Mapa e na Tabela)
+    const handleRepColorChange = (e) => {
+      if (e.target && (e.target.classList.contains('input-change-rep-color') || e.target.classList.contains('input-tabela-cor'))) {
+        const repName = e.target.dataset.rep;
+        const newColor = e.target.value.toUpperCase();
+        if (repName && newColor) {
+          alterarCorRepresentante(repName, newColor);
+        }
+      }
+    };
+    document.addEventListener('input', handleRepColorChange);
+    document.addEventListener('change', handleRepColorChange);
+
     // Alternância do título da aba ao sair da página (atrai o usuário de volta)
     const originalPageTitle = document.title;
     document.addEventListener('visibilitychange', () => {
@@ -714,6 +727,15 @@ const App = (() => {
     }
   }
 
+  function alterarCorRepresentante(nomeRep, novaCor) {
+    if (!nomeRep || !novaCor) return;
+    sincronizarCorRepresentante(nomeRep, novaCor);
+    const inputRep = document.getElementById('inputRepresentante');
+    if (inputRep && inputRep.value.trim().toLowerCase() === nomeRep.trim().toLowerCase()) {
+      setCorAtual(novaCor);
+    }
+  }
+
   function renderTabela() {
     const tbody = document.getElementById('tabelaCorpo');
     const badgeCount = document.getElementById('badgeTableCount');
@@ -757,8 +779,10 @@ const App = (() => {
           </span>
         </td>
         <td class="py-3 px-4 text-center">
-          <div class="flex items-center justify-center space-x-1.5">
-            <div class="w-6 h-6 rounded-md shadow-sm border border-black border-opacity-20 flex-shrink-0" style="background-color: ${item.cor};"></div>
+          <div class="flex items-center justify-center space-x-2">
+            <label class="cursor-pointer inline-flex items-center" title="Clique para alterar a cor do representante ${escapeHtml(item.representante)}">
+              <input type="color" value="${item.cor}" data-rep="${escapeHtml(item.representante)}" class="input-tabela-cor w-6 h-6 rounded-md shadow-xs border border-gray-400 hover:border-purple-600 cursor-pointer p-0 bg-transparent flex-shrink-0 transition-transform hover:scale-105" />
+            </label>
             <span class="text-xs font-mono uppercase text-black font-bold">${item.cor}</span>
           </div>
         </td>
@@ -776,8 +800,10 @@ const App = (() => {
           </span>
         </td>
         <td class="py-3 px-4 font-bold text-black">
-          <div class="flex items-center gap-1.5">
-            <span class="w-2.5 h-2.5 rounded-full" style="background-color: ${item.cor};"></span>
+          <div class="flex items-center gap-2">
+            <label class="cursor-pointer inline-flex items-center" title="Clique para alterar a cor de ${escapeHtml(item.representante)}">
+              <input type="color" value="${item.cor}" data-rep="${escapeHtml(item.representante)}" class="input-tabela-cor w-3.5 h-3.5 rounded-full border border-gray-400 hover:border-purple-600 cursor-pointer p-0 bg-transparent flex-shrink-0 transition-transform hover:scale-110" />
+            </label>
             <span>${escapeHtml(item.representante)}</span>
           </div>
         </td>
@@ -1133,7 +1159,8 @@ const App = (() => {
   }
 
   return {
-    init
+    init,
+    alterarCorRepresentante
   };
 })();
 

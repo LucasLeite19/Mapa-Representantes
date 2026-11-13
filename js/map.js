@@ -351,15 +351,17 @@ const MapManager = (() => {
 
   /**
    * CARD DETALHADO (Exibido no HOVER ou no CLIQUE):
-   * Mostra todas as marcas, representantes, badges, números e cores
+   * Mostra todas as marcas, representantes, badges, números e cores (com seletor interativo de cor)
    */
   function buildDetailedCardHtml(cidadeNome, itensDaCidade) {
     let rowsHtml = '';
     itensDaCidade.forEach(it => {
       rowsHtml += `
-        <div class="flex items-center justify-between gap-2 py-1 border-b border-gray-700 last:border-0">
+        <div class="flex items-center justify-between gap-2 py-1.5 border-b border-gray-700 last:border-0">
           <div class="flex items-center gap-1.5 overflow-hidden">
-            <span class="w-2.5 h-2.5 rounded-full flex-shrink-0" style="background-color: ${it.cor};"></span>
+            <label class="cursor-pointer flex items-center" title="Clique para alterar a cor do representante ${escapeHtml(it.representante)}">
+              <input type="color" value="${it.cor}" data-rep="${escapeHtml(it.representante)}" class="input-change-rep-color w-4 h-4 rounded-full border border-white/70 cursor-pointer p-0 bg-transparent flex-shrink-0" />
+            </label>
             <span class="rep-brand-badge brand-${it.marcaId || '1'}">${escapeHtml(it.marcaNome || 'Marca')}</span>
             <span class="font-semibold text-white text-xs truncate">${escapeHtml(it.representante)}</span>
           </div>
@@ -376,6 +378,9 @@ const MapManager = (() => {
         </div>
         <div class="flex flex-col gap-0.5">
           ${rowsHtml}
+        </div>
+        <div class="text-[8.5px] text-gray-400 mt-1 pt-1 border-t border-gray-700/60 text-center">
+          Clique no círculo de cor para alterar o representante
         </div>
       </div>
     `;
@@ -488,11 +493,16 @@ const MapManager = (() => {
     });
 
     // 3. No CLIQUE: Abre Popup rico com todas as marcas e dados completos
-    layer.unbindPopup();
-    layer.bindPopup(buildDetailedCardHtml(cidadeNome, itensDaCidade), {
-      className: 'rep-detailed-popup',
-      autoPan: true
-    });
+    const isPopupOpen = layer.isPopupOpen && layer.isPopupOpen();
+    if (isPopupOpen) {
+      layer.setPopupContent(buildDetailedCardHtml(cidadeNome, itensDaCidade));
+    } else {
+      layer.unbindPopup();
+      layer.bindPopup(buildDetailedCardHtml(cidadeNome, itensDaCidade), {
+        className: 'rep-detailed-popup',
+        autoPan: true
+      });
+    }
 
     layer.bringToFront();
     return entry;

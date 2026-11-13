@@ -307,6 +307,29 @@
   padding: 4px 10px !important;
 }
 
+/* Color picker nativo estilizado para mapa e tabela */
+.input-change-rep-color,
+.input-tabela-cor {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}
+
+.input-change-rep-color::-webkit-color-swatch-wrapper,
+.input-tabela-cor::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+
+.input-change-rep-color::-webkit-color-swatch {
+  border: none;
+  border-radius: 50%;
+}
+
+.input-tabela-cor::-webkit-color-swatch {
+  border: none;
+  border-radius: 4px;
+}
+
 /* Scrollbars limpos */
 ::-webkit-scrollbar {
   width: 6px;

@@ -33,6 +33,12 @@ const ExcelManager = (() => {
     return { r: 59, g: 130, b: 246 };
   }
 
+  function isDarkColor(hex) {
+    const rgb = hexToRgb(hex);
+    const yiq = ((rgb.r * 299) + (rgb.g * 587) + (rgb.b * 114)) / 1000;
+    return yiq < 140;
+  }
+
   /**
    * Baixa a Planilha Modelo para o Estado Selecionado com a coluna "Marca" (SheetJS)
    */
@@ -96,24 +102,26 @@ const ExcelManager = (() => {
   }
 
   /**
-   * Gera a Planilha Final Avançada com cores em ARGB e coluna Marca (ExcelJS)
+   * Gera a Planilha Final Padronizada (Mesmo formato da planilha de importação)
+   * Colunas: ID IBGE, Estado, Município, Marca, Representante, Cor Hex
+   * Célula Cor Hex preenchida com a cor exata em ARGB e código legível.
    */
   async function generateStyledExcelBuffer(itensCadastrados) {
     const workbook = new ExcelJS.Workbook();
     workbook.creator = 'Gestor de Representantes';
     workbook.created = new Date();
 
-    const sheet = workbook.addWorksheet('Representantes', {
+    const sheet = workbook.addWorksheet('Municípios', {
       views: [{ showGridLines: true }]
     });
 
     sheet.columns = [
-      { header: 'Nº', key: 'seq', width: 8 },
-      { header: 'Cor', key: 'cor', width: 12 },
-      { header: 'Estado', key: 'estado', width: 12 },
-      { header: 'Município', key: 'municipio', width: 30 },
+      { header: 'ID IBGE', key: 'idIbge', width: 14 },
+      { header: 'Estado', key: 'estado', width: 10 },
+      { header: 'Município', key: 'municipio', width: 32 },
       { header: 'Marca', key: 'marca', width: 18 },
-      { header: 'Representante', key: 'representante', width: 30 }
+      { header: 'Representante', key: 'representante', width: 30 },
+      { header: 'Cor Hex', key: 'corHex', width: 14 }
     ];
 
     const headerRow = sheet.getRow(1);
@@ -138,53 +146,52 @@ const ExcelManager = (() => {
 
     itensOrdenados.forEach(item => {
       const argbColor = hexToArgb(item.cor);
+      const isDark = isDarkColor(item.cor);
 
       const row = sheet.addRow({
-        seq: item.seqId,
-        cor: '', // Regra: Sem texto na coluna cor!
+        idIbge: Number(item.municipioId) || item.municipioId,
         estado: item.estadoSigla,
         municipio: item.municipioNome,
         marca: item.marcaNome,
-        representante: item.representante
+        representante: item.representante,
+        corHex: item.cor
       });
 
       row.height = 22;
 
-      // Nº
-      const cellSeq = row.getCell('seq');
-      cellSeq.alignment = { vertical: 'middle', horizontal: 'center' };
-      cellSeq.font = { bold: true, size: 10, color: { argb: 'FF374151' } };
-
-      // Cor de fundo exata em ARGB
-      const cellCor = row.getCell('cor');
-      cellCor.fill = {
-        type: 'pattern',
-        pattern: 'solid',
-        fgColor: { argb: argbColor }
-      };
+      // ID IBGE
+      const cellId = row.getCell('idIbge');
+      cellId.alignment = { vertical: 'middle', horizontal: 'center' };
+      cellId.font = { size: 10, color: { argb: 'FF374151' } };
 
       // Estado
       const cellEstado = row.getCell('estado');
       cellEstado.alignment = { vertical: 'middle', horizontal: 'center' };
-      cellEstado.font = { bold: true, size: 10, color: { argb: 'FF4F46E5' } };
+      cellEstado.font = { bold: true, size: 10, color: { argb: 'FF7C3AED' } };
 
       // Município
       const cellMun = row.getCell('municipio');
       cellMun.alignment = { vertical: 'middle', horizontal: 'left' };
-      cellMun.font = { size: 10, color: { argb: 'FF111827' } };
+      cellMun.font = { size: 10, bold: true, color: { argb: 'FF111827' } };
 
       // Marca
       const cellMarca = row.getCell('marca');
       cellMarca.alignment = { vertical: 'middle', horizontal: 'center' };
       cellMarca.font = { bold: true, size: 10, color: { argb: 'FF4B5563' } };
 
-      // Representante com texto na mesma cor em negrito
+      // Representante
       const cellRep = row.getCell('representante');
       cellRep.alignment = { vertical: 'middle', horizontal: 'left' };
-      cellRep.font = {
-        bold: true,
-        color: { argb: argbColor },
-        size: 11
+      cellRep.font = { bold: true, size: 10, color: { argb: 'FF111827' } };
+
+      // Cor Hex (Fundo ARGB com texto contrastado)
+      const cellCorHex = row.getCell('corHex');
+      cellCorHex.alignment = { vertical: 'middle', horizontal: 'center' };
+      cellCorHex.font = { bold: true, size: 10, color: { argb: isDark ? 'FFFFFFFF' : 'FF000000' } };
+      cellCorHex.fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: argbColor }
       };
 
       row.eachCell(cell => {
