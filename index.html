@@ -356,12 +356,12 @@
         <div id="mapWrapper">
           <div id="map"></div>
 
-          <!-- Painel Flutuante Duplo em Tela Cheia no Canto Superior Direito (Padrão Corporativo Fundo Branco) -->
+          <!-- Painel Flutuante Duplo em Tela Cheia no Canto Superior Direito (Fundo Branco Sólido Igual ao Botão) -->
           <div id="floatingFullscreenToolbar" class="no-export hidden absolute top-3 right-3 z-30 flex items-start gap-2.5 pointer-events-auto">
             
-            <!-- Quadradinho 1: Configurações de Camadas do Mapa (Vertical Branco) -->
-            <div class="bg-white/95 backdrop-blur-md p-2.5 rounded-xl shadow-lg border border-gray-300 flex flex-col gap-1.5 min-w-[130px]">
-              <div class="text-[10px] font-black text-black uppercase tracking-wider px-1 pb-1 border-b border-gray-200 flex items-center justify-between">
+            <!-- Quadradinho 1: Configurações de Camadas do Mapa (Fundo Branco Sólido) -->
+            <div class="fullscreen-card-white flex flex-col gap-1.5 min-w-[135px]">
+              <div class="card-title">
                 <span>Camadas</span>
                 <span class="text-purple-600">🗺️</span>
               </div>
@@ -373,26 +373,26 @@
               </div>
             </div>
 
-            <!-- Quadradinho 2: Configurações Gerais e Ajustes do Mapa (Vertical Branco) -->
-            <div class="bg-white/95 backdrop-blur-md p-2.5 rounded-xl shadow-lg border border-gray-300 flex flex-col gap-1.5 min-w-[135px]">
-              <div class="text-[10px] font-black text-black uppercase tracking-wider px-1 pb-1 border-b border-gray-200 flex items-center justify-between">
+            <!-- Quadradinho 2: Configurações Gerais e Ajustes do Mapa (Fundo Branco Sólido) -->
+            <div class="fullscreen-card-white flex flex-col gap-1.5 min-w-[140px]">
+              <div class="card-title">
                 <span>Ajustes</span>
                 <span class="text-purple-600">⚙️</span>
               </div>
               
               <div class="flex flex-col gap-1 text-xs">
-                <label class="flex items-center space-x-2 cursor-pointer font-bold text-black bg-gray-100 hover:bg-gray-200 px-2 py-1.5 rounded-lg transition-colors" title="Exibir ou ocultar divisões municipais">
+                <label class="flex items-center space-x-2 cursor-pointer font-bold text-black bg-white hover:bg-gray-50 border border-gray-300 px-2.5 py-1.5 rounded-lg transition-colors" title="Exibir ou ocultar divisões municipais">
                   <input id="checkDivisoesFullscreen" type="checkbox" checked class="h-3.5 w-3.5 text-purple-600 rounded border-gray-300 focus:ring-purple-600" />
                   <span>Divisões</span>
                 </label>
 
-                <label class="flex items-center space-x-2 cursor-pointer font-bold text-black bg-gray-100 hover:bg-gray-200 px-2 py-1.5 rounded-lg transition-colors" title="Exibir ou ocultar rótulos">
+                <label class="flex items-center space-x-2 cursor-pointer font-bold text-black bg-white hover:bg-gray-50 border border-gray-300 px-2.5 py-1.5 rounded-lg transition-colors" title="Exibir ou ocultar rótulos">
                   <input id="checkRotulosFullscreen" type="checkbox" checked class="h-3.5 w-3.5 text-purple-600 rounded border-gray-300 focus:ring-purple-600" />
                   <span>Rótulos</span>
                 </label>
 
-                <button id="btnResetZoomFullscreen" title="Reenquadrar visão do Estado" class="w-full text-left px-2 py-1.5 text-black font-bold hover:bg-gray-100 rounded-lg transition-colors flex items-center gap-1.5 border border-gray-200">
-                  <svg class="w-3.5 h-3.5 text-gray-700 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <button id="btnResetZoomFullscreen" title="Reenquadrar visão do Estado" class="w-full text-left px-2.5 py-1.5 text-black font-bold bg-white hover:bg-gray-50 rounded-lg transition-colors flex items-center gap-1.5 border border-gray-300">
+                  <svg class="w-3.5 h-3.5 text-black flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
                   </svg>
                   <span>Enquadrar</span>
