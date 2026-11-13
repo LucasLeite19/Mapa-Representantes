@@ -358,12 +358,15 @@ const MapManager = (() => {
     itensDaCidade.forEach(it => {
       rowsHtml += `
         <div class="flex items-center justify-between gap-2 py-1.5 border-b border-gray-700 last:border-0">
-          <div class="flex items-center gap-2 overflow-hidden">
-            <button type="button" class="btn-abrir-modal-cor p-0.5 rounded-full hover:ring-2 hover:ring-white transition-all flex items-center justify-center flex-shrink-0" data-rep="${escapeHtml(it.representante)}" data-cor="${it.cor}" title="Clique para alterar a cor do representante ${escapeHtml(it.representante)}">
+          <div class="flex items-center gap-2 overflow-hidden flex-1">
+            <button type="button" class="btn-abrir-modal-cor p-0.5 rounded-full hover:ring-2 hover:ring-white transition-all flex items-center justify-center flex-shrink-0" data-rep="${escapeHtml(it.representante)}" data-cor="${it.cor}" title="Alterar cor de ${escapeHtml(it.representante)}">
               <span class="w-4 h-4 rounded-full border border-white/80 shadow-xs flex-shrink-0" style="background-color: ${it.cor};"></span>
             </button>
             <span class="rep-brand-badge brand-${it.marcaId || '1'}">${escapeHtml(it.marcaNome || 'Marca')}</span>
             <span class="font-semibold text-white text-xs truncate">${escapeHtml(it.representante)}</span>
+            <button type="button" class="btn-abrir-modal-cor p-1 text-gray-400 hover:text-white hover:bg-white/20 rounded transition-colors ml-auto flex-shrink-0" data-rep="${escapeHtml(it.representante)}" data-cor="${it.cor}" title="Editar nome ou cor de ${escapeHtml(it.representante)}">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+            </button>
           </div>
           <span class="text-amber-400 font-extrabold text-[10px] ml-1 flex-shrink-0">Nº ${it.seqId}</span>
         </div>
@@ -380,7 +383,7 @@ const MapManager = (() => {
           ${rowsHtml}
         </div>
         <div class="text-[9px] text-gray-400 mt-1.5 pt-1 border-t border-gray-700/60 text-center font-medium">
-          💡 Clique na cor do representante para alterá-la
+          💡 Clique no lápis ou na cor para editar nome e cor do representante
         </div>
       </div>
     `;

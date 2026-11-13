@@ -309,11 +309,29 @@ const App = (() => {
 
     document.getElementById('btnSalvarModalCor').addEventListener('click', () => {
       if (!repSelecionadoParaCor) return;
+      const inputNome = document.getElementById('inputModalNomeRep');
+      const novoNome = inputNome ? inputNome.value.trim() : repSelecionadoParaCor;
+
+      if (!novoNome) {
+        showToast('O nome do representante não pode ficar em branco.', 'warning');
+        if (inputNome) inputNome.focus();
+        return;
+      }
+
       const corFinal = inputModalCor.value.toUpperCase();
-      alterarCorRepresentante(repSelecionadoParaCor, corFinal);
+      atualizarRepresentanteCompleto(repSelecionadoParaCor, novoNome, corFinal);
       fecharModalAlterarCor();
-      showToast(`Cor de ${repSelecionadoParaCor} atualizada com sucesso!`, 'success');
     });
+
+    const inputModalNome = document.getElementById('inputModalNomeRep');
+    if (inputModalNome) {
+      inputModalNome.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          document.getElementById('btnSalvarModalCor').click();
+        }
+      });
+    }
 
     // Delegar cliques para abrir o modal de cor a partir do Mapa ou da Tabela
     document.addEventListener('click', (e) => {
@@ -759,7 +777,9 @@ const App = (() => {
     repSelecionadoParaCor = nomeRep;
 
     const modal = document.getElementById('modalAlterarCor');
-    const txtNome = document.getElementById('modalCorNomeRep');
+    const txtSub = document.getElementById('modalCorNomeRep');
+    const inputNome = document.getElementById('inputModalNomeRep');
+    const infoCidades = document.getElementById('modalQtdCidadesInfo');
     const badge = document.getElementById('modalCorPreviewBadge');
     const inputCor = document.getElementById('inputModalCor');
     const inputHex = document.getElementById('inputModalCorHex');
@@ -771,7 +791,15 @@ const App = (() => {
         .map(it => String(it.municipioId))
     ).size;
 
-    txtNome.textContent = `${nomeRep} (${totalCidades} ${totalCidades === 1 ? 'cidade atendida' : 'cidades atendidas'})`;
+    if (inputNome) {
+      inputNome.value = nomeRep;
+    }
+    if (txtSub) {
+      txtSub.textContent = `Atualmente: ${nomeRep}`;
+    }
+    if (infoCidades) {
+      infoCidades.textContent = `Este representante atende ${totalCidades} ${totalCidades === 1 ? 'município' : 'municípios'}. O novo nome e cor serão aplicados a todas as ocorrências.`;
+    }
 
     const corInicial = (corAtual && corAtual.startsWith('#')) ? corAtual.toUpperCase() : '#7C3AED';
     inputCor.value = corInicial;
@@ -795,6 +823,53 @@ const App = (() => {
     });
 
     modal.classList.remove('hidden');
+    if (inputNome) {
+      setTimeout(() => inputNome.focus(), 80);
+    }
+  }
+
+  function atualizarRepresentanteCompleto(nomeAntigo, novoNome, novaCor) {
+    if (!nomeAntigo || !novoNome) return;
+    const antigoLower = nomeAntigo.trim().toLowerCase();
+    const nomeLimpo = novoNome.trim();
+    const corLimpa = (novaCor && novaCor.startsWith('#')) ? novaCor.toUpperCase() : '#7C3AED';
+
+    let atualizados = 0;
+    const cidadesAfetadas = new Set();
+
+    state.itensCadastrados.forEach(it => {
+      if (it.representante.trim().toLowerCase() === antigoLower) {
+        it.representante = nomeLimpo;
+        it.cor = corLimpa;
+        cidadesAfetadas.add(String(it.municipioId));
+        atualizados++;
+      }
+    });
+
+    if (atualizados > 0) {
+      if (state.representantesExistentes) {
+        state.representantesExistentes.delete(nomeAntigo.trim());
+        state.representantesExistentes.add(nomeLimpo);
+      }
+      atualizarDatalistRepresentantes();
+
+      cidadesAfetadas.forEach(mId => {
+        const itensDaCidade = state.itensCadastrados.filter(it => String(it.municipioId) === mId);
+        MapManager.syncMunicipalityLayer(mId, null, itensDaCidade);
+      });
+
+      const inputRep = document.getElementById('inputRepresentante');
+      if (inputRep && inputRep.value.trim().toLowerCase() === antigoLower) {
+        inputRep.value = nomeLimpo;
+        setCorAtual(corLimpa);
+      }
+
+      renderTabela();
+      atualizarResumoLateral();
+      atualizarMetricas();
+
+      showToast(`Representante atualizado para "${nomeLimpo}" (${cidadesAfetadas.size} ${cidadesAfetadas.size === 1 ? 'município' : 'municípios'} no mapa)!`, 'success');
+    }
   }
 
   function fecharModalAlterarCor() {
@@ -896,11 +971,16 @@ const App = (() => {
           </span>
         </td>
         <td class="py-3 px-4 font-bold text-black">
-          <div class="flex items-center gap-2">
-            <button type="button" class="btn-abrir-modal-cor inline-flex items-center p-0.5 rounded-full hover:ring-2 hover:ring-purple-600 transition-all flex-shrink-0" data-rep="${escapeHtml(item.representante)}" data-cor="${item.cor}" title="Clique para alterar a cor de ${escapeHtml(item.representante)}">
-              <span class="w-3.5 h-3.5 rounded-full border border-gray-400 flex-shrink-0" style="background-color: ${item.cor};"></span>
+          <div class="flex items-center justify-between gap-1 max-w-[210px]">
+            <div class="flex items-center gap-2 overflow-hidden">
+              <button type="button" class="btn-abrir-modal-cor inline-flex items-center p-0.5 rounded-full hover:ring-2 hover:ring-purple-600 transition-all flex-shrink-0" data-rep="${escapeHtml(item.representante)}" data-cor="${item.cor}" title="Alterar cor de ${escapeHtml(item.representante)}">
+                <span class="w-3.5 h-3.5 rounded-full border border-gray-400 flex-shrink-0" style="background-color: ${item.cor};"></span>
+              </button>
+              <span class="truncate">${escapeHtml(item.representante)}</span>
+            </div>
+            <button type="button" class="btn-abrir-modal-cor text-gray-400 hover:text-purple-700 hover:bg-purple-100 p-1 rounded transition-colors flex-shrink-0" data-rep="${escapeHtml(item.representante)}" data-cor="${item.cor}" title="Editar nome ou cor de ${escapeHtml(item.representante)}">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
             </button>
-            <span class="truncate max-w-[180px]">${escapeHtml(item.representante)}</span>
           </div>
         </td>
         <td class="py-3 px-4 text-center">

@@ -663,23 +663,32 @@
     </div>
   </div>
 
-  <!-- Modal: Alterar Cor do Representante (Design Tranquilo e Seguro) -->
+  <!-- Modal: Editar Representante (Nome e Cor Institucional) -->
   <div id="modalAlterarCor" class="fixed inset-0 bg-gray-900 bg-opacity-60 backdrop-filter blur-xs z-50 flex items-center justify-center p-4 hidden">
     <div class="bg-white rounded-2xl max-w-md w-full p-5 sm:p-6 shadow-2xl border border-gray-200 space-y-4">
       <div class="flex items-center justify-between border-b border-gray-100 pb-3">
         <div class="flex items-center gap-3">
           <div id="modalCorPreviewBadge" class="w-9 h-9 rounded-xl shadow-xs border border-gray-300 flex items-center justify-center flex-shrink-0" style="background-color: #7c3aed;"></div>
           <div>
-            <h3 class="text-sm sm:text-base font-black text-black">Alterar Cor do Representante</h3>
-            <p id="modalCorNomeRep" class="text-xs font-bold text-purple-700 truncate max-w-[220px]">Representante</p>
+            <h3 class="text-sm sm:text-base font-black text-black">Editar Representante</h3>
+            <p id="modalCorNomeRep" class="text-xs font-bold text-purple-700 truncate max-w-[220px]">Alteração de Nome e Cor</p>
           </div>
         </div>
         <button id="btnFecharModalCor" class="text-gray-400 hover:text-black text-2xl font-bold leading-none p-1">&times;</button>
       </div>
 
+      <!-- Campo de Alteração de Nome -->
+      <div>
+        <label for="inputModalNomeRep" class="block text-xs font-black text-black mb-1">Nome do Representante:</label>
+        <div class="relative">
+          <input id="inputModalNomeRep" type="text" maxlength="80" class="w-full text-xs font-bold bg-white border border-gray-300 rounded-lg px-3 py-2 text-black focus:outline-none focus:ring-2 focus:ring-purple-600 shadow-xs" placeholder="Digite o nome do representante..." />
+        </div>
+        <p id="modalQtdCidadesInfo" class="text-[11px] text-gray-500 font-semibold mt-1">Este representante atende X município(s).</p>
+      </div>
+
       <!-- Paleta de Cores Recomendadas (Toque Fácil) -->
       <div>
-        <label class="block text-xs font-black text-black mb-1.5">Paleta Rápida (1 Toque):</label>
+        <label class="block text-xs font-black text-black mb-1.5">Cor Institucional (1 Toque):</label>
         <div id="modalCorPaletaPredefinida" class="grid grid-cols-6 gap-2">
           <!-- Gerado via JS com 12 cores vibrantes corporativas -->
         </div>
@@ -708,7 +717,7 @@
           <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
           </svg>
-          <span>Salvar Nova Cor</span>
+          <span>Salvar Alterações</span>
         </button>
       </div>
     </div>
