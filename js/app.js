@@ -1,8 +1,8 @@
 /**
  * MÓDULO PRINCIPAL: APP CONTROLLER
  * Coordena interface, eventos, regras de negócio e sincronização entre mapa e tabela.
- * Suporta destaque visual do Estado, detalhamento cartográfico de todas as cidades com clique direto no mapa,
- * e até 6 marcas por município. 100% volátil em memória.
+ * Suporta exportação com foto enquadrada no Estado selecionado, geração de PDF de 2 folhas (Mapa + Legenda/Resumo)
+ * e barra de navegação corporativa centralizada com 4 ações principais.
  */
 
 const App = (() => {
@@ -75,9 +75,96 @@ const App = (() => {
   }
 
   /**
+   * Alterna entre modo manual e modo importar excel
+   */
+  function setAbaAtiva(modo) {
+    const tabManual = document.getElementById('tabManual');
+    const tabMassa = document.getElementById('tabMassa');
+    const contentManual = document.getElementById('contentManual');
+    const contentMassa = document.getElementById('contentMassa');
+    const navBtnManual = document.getElementById('navBtnManual');
+    const navBtnExcel = document.getElementById('navBtnExcel');
+
+    if (modo === 'manual') {
+      if (tabManual) tabManual.className = 'flex-1 py-3 px-4 text-xs sm:text-sm font-semibold border-b-2 border-indigo-600 text-indigo-600 flex items-center justify-center gap-1.5 transition-colors';
+      if (tabMassa) tabMassa.className = 'flex-1 py-3 px-4 text-xs sm:text-sm font-semibold border-b-2 border-transparent text-gray-500 hover:text-gray-700 flex items-center justify-center gap-1.5 transition-colors';
+      if (contentManual) contentManual.classList.remove('hidden');
+      if (contentMassa) contentMassa.classList.add('hidden');
+
+      if (navBtnManual) {
+        navBtnManual.classList.add('bg-indigo-600', 'text-white', 'shadow-sm');
+        navBtnManual.classList.remove('bg-gray-100', 'text-gray-700', 'hover:bg-gray-200');
+      }
+      if (navBtnExcel) {
+        navBtnExcel.classList.remove('bg-indigo-600', 'text-white', 'shadow-sm');
+        navBtnExcel.classList.add('bg-gray-100', 'text-gray-700', 'hover:bg-gray-200');
+      }
+    } else {
+      if (tabMassa) tabMassa.className = 'flex-1 py-3 px-4 text-xs sm:text-sm font-semibold border-b-2 border-indigo-600 text-indigo-600 flex items-center justify-center gap-1.5 transition-colors';
+      if (tabManual) tabManual.className = 'flex-1 py-3 px-4 text-xs sm:text-sm font-semibold border-b-2 border-transparent text-gray-500 hover:text-gray-700 flex items-center justify-center gap-1.5 transition-colors';
+      if (contentMassa) contentMassa.classList.remove('hidden');
+      if (contentManual) contentManual.classList.add('hidden');
+
+      if (navBtnExcel) {
+        navBtnExcel.classList.add('bg-indigo-600', 'text-white', 'shadow-sm');
+        navBtnExcel.classList.remove('bg-gray-100', 'text-gray-700', 'hover:bg-gray-200');
+      }
+      if (navBtnManual) {
+        navBtnManual.classList.remove('bg-indigo-600', 'text-white', 'shadow-sm');
+        navBtnManual.classList.add('bg-gray-100', 'text-gray-700', 'hover:bg-gray-200');
+      }
+    }
+  }
+
+  /**
    * Vinculação de Eventos da Interface
    */
   function bindEvents() {
+    // 4 Botões Centrais da Sub-Barra de Navegação
+    const navBtnManual = document.getElementById('navBtnManual');
+    const navBtnExcel = document.getElementById('navBtnExcel');
+    const navBtnSugestoes = document.getElementById('navBtnSugestoes');
+    const navBtnAjuda = document.getElementById('navBtnAjuda');
+
+    if (navBtnManual) {
+      navBtnManual.addEventListener('click', () => setAbaAtiva('manual'));
+    }
+    if (navBtnExcel) {
+      navBtnExcel.addEventListener('click', () => setAbaAtiva('massa'));
+    }
+    if (navBtnSugestoes) {
+      navBtnSugestoes.addEventListener('click', () => {
+        const modal = document.getElementById('modalSugestoes');
+        if (modal) modal.classList.remove('hidden');
+      });
+    }
+    if (navBtnAjuda) {
+      navBtnAjuda.addEventListener('click', () => {
+        const modal = document.getElementById('modalAjuda');
+        if (modal) modal.classList.remove('hidden');
+      });
+    }
+
+    // Fechar modais de Sugestão e Ajuda
+    const btnFecharSugestoes = document.getElementById('btnFecharModalSugestoes');
+    if (btnFecharSugestoes) {
+      btnFecharSugestoes.addEventListener('click', () => {
+        document.getElementById('modalSugestoes').classList.add('hidden');
+      });
+    }
+    const btnFecharAjuda = document.getElementById('btnFecharModalAjuda');
+    if (btnFecharAjuda) {
+      btnFecharAjuda.addEventListener('click', () => {
+        document.getElementById('modalAjuda').classList.add('hidden');
+      });
+    }
+
+    // Abas de navegação internas
+    const tabManual = document.getElementById('tabManual');
+    const tabMassa = document.getElementById('tabMassa');
+    if (tabManual) tabManual.addEventListener('click', () => setAbaAtiva('manual'));
+    if (tabMassa) tabMassa.addEventListener('click', () => setAbaAtiva('massa'));
+
     // Seletor de Estados
     document.getElementById('selectEstado').addEventListener('change', (e) => {
       onEstadoChange(e.target.value);
@@ -88,7 +175,7 @@ const App = (() => {
       onMunicipioChange(e.target.value);
     });
 
-    // Checkbox para ligar/desligar visualização das divisões municipais
+    // Checkbox de divisões municipais
     const checkDivisoes = document.getElementById('checkDivisoesCidades');
     if (checkDivisoes) {
       checkDivisoes.addEventListener('change', (e) => {
@@ -134,26 +221,6 @@ const App = (() => {
     // Botão Salvar Representante (Manual)
     document.getElementById('btnSalvarRepresentante').addEventListener('click', salvarRepresentanteManual);
 
-    // Abas de Navegação (Manual vs Massa)
-    const tabManual = document.getElementById('tabManual');
-    const tabMassa = document.getElementById('tabMassa');
-    const contentManual = document.getElementById('contentManual');
-    const contentMassa = document.getElementById('contentMassa');
-
-    tabManual.addEventListener('click', () => {
-      tabManual.className = 'flex-1 py-3 px-4 text-xs sm:text-sm font-semibold border-b-2 border-indigo-600 text-indigo-600 flex items-center justify-center gap-1.5 transition-colors';
-      tabMassa.className = 'flex-1 py-3 px-4 text-xs sm:text-sm font-semibold border-b-2 border-transparent text-gray-500 hover:text-gray-700 flex items-center justify-center gap-1.5 transition-colors';
-      contentManual.classList.remove('hidden');
-      contentMassa.classList.add('hidden');
-    });
-
-    tabMassa.addEventListener('click', () => {
-      tabMassa.className = 'flex-1 py-3 px-4 text-xs sm:text-sm font-semibold border-b-2 border-indigo-600 text-indigo-600 flex items-center justify-center gap-1.5 transition-colors';
-      tabManual.className = 'flex-1 py-3 px-4 text-xs sm:text-sm font-semibold border-b-2 border-transparent text-gray-500 hover:text-gray-700 flex items-center justify-center gap-1.5 transition-colors';
-      contentMassa.classList.remove('hidden');
-      contentManual.classList.add('hidden');
-    });
-
     // Botões de Camadas de Fundo do Mapa
     document.querySelectorAll('.btn-tile-layer').forEach(btn => {
       btn.addEventListener('click', (e) => {
@@ -163,10 +230,10 @@ const App = (() => {
 
     // Botão Enquadrar (Reset Zoom)
     document.getElementById('btnResetZoom').addEventListener('click', () => {
-      if (state.itensCadastrados.length > 0) {
-        MapManager.fitAllRegisteredCities();
-      } else if (state.estadoBounds) {
+      if (state.estadoBounds) {
         MapManager.fitToBounds(state.estadoBounds);
+      } else if (state.itensCadastrados.length > 0) {
+        MapManager.fitAllRegisteredCities();
       } else {
         MapManager.resetToBrasil();
       }
@@ -183,6 +250,7 @@ const App = (() => {
         if (wrapper && wrapper.classList.contains('map-fullscreen')) {
           MapManager.toggleFullScreen();
         }
+        document.querySelectorAll('#modalSugestoes, #modalAjuda, #modalMarcas').forEach(m => m.classList.add('hidden'));
       }
     });
 
@@ -298,10 +366,7 @@ const App = (() => {
   }
 
   /**
-   * Ação ao trocar o Estado selecionado:
-   * 1. Enquadra o mapa no Estado.
-   * 2. Destaca as fronteiras externas do Estado.
-   * 3. Carrega e exibe a divisão detalhada de todos os municípios com clique e hover.
+   * Ação ao trocar o Estado selecionado
    */
   async function onEstadoChange(estadoId) {
     const selectMunicipio = document.getElementById('selectMunicipio');
@@ -329,7 +394,6 @@ const App = (() => {
     state.estadoSelecionado = uf;
     infoModelo.textContent = `Estado Selecionado: ${uf.nome} (${uf.sigla})`;
 
-    // Enquadramento imediato via Bounding Box pré-computada
     const bounds = IBGEService.getEstadoBounds(uf.sigla);
     if (bounds) {
       state.estadoBounds = bounds;
@@ -341,17 +405,14 @@ const App = (() => {
     labelTotal.textContent = 'Carregando malhas...';
 
     try {
-      // 1. Carrega lista tabular dos municípios
       const municipios = await IBGEService.getMunicipios(uf.id);
       state.municipiosAtuais = municipios;
       atualizarSelectMunicipios();
       labelTotal.textContent = `${municipios.length} municípios`;
 
-      // Cria mapa de lookup rápido: codarea (ID IBGE 7 dígitos) -> Nome
       const municipiosMap = new Map();
       municipios.forEach(m => municipiosMap.set(String(m.id), m.nome));
 
-      // 2. Carrega simultaneamente a malha externa do Estado e as divisões municipais detalhadas
       const [malhaEstado, malhaMunicipios] = await Promise.all([
         IBGEService.getMalhaEstado(uf.sigla).catch(e => {
           console.warn('Falha contorno estado:', e);
@@ -363,9 +424,7 @@ const App = (() => {
         })
       ]);
 
-      // 3. Aplica o destaque no mapa com suporte ao clique direto na cidade
       MapManager.setStateHighlight(malhaEstado, malhaMunicipios, municipiosMap, (clickedMunicipioId) => {
-        // Ao clicar em uma cidade no mapa, seleciona automaticamente no <select>
         if (selectMunicipio && clickedMunicipioId) {
           selectMunicipio.value = clickedMunicipioId;
           onMunicipioChange(clickedMunicipioId);
@@ -382,9 +441,6 @@ const App = (() => {
     }
   }
 
-  /**
-   * Atualiza as opções do <select id="selectMunicipio">
-   */
   function atualizarSelectMunicipios() {
     const select = document.getElementById('selectMunicipio');
     const valorAnterior = select.value;
@@ -421,9 +477,6 @@ const App = (() => {
     renderSelectMarcas(select.value);
   }
 
-  /**
-   * Ação ao selecionar um município
-   */
   async function onMunicipioChange(municipioId) {
     MapManager.clearPreview();
     state.previewGeoJson = null;
@@ -450,9 +503,6 @@ const App = (() => {
     }
   }
 
-  /**
-   * Cadastro Manual: Salvar Representante
-   */
   async function salvarRepresentanteManual() {
     const selectEstado = document.getElementById('selectEstado');
     const selectMunicipio = document.getElementById('selectMunicipio');
@@ -877,6 +927,12 @@ const App = (() => {
     showToast(`Importação concluída! ${adicionados} adicionados com sucesso${erros > 0 ? `, ${erros} com falha` : ''}.`, adicionados > 0 ? 'success' : 'warning');
   }
 
+  /**
+   * Baixar Pacote Final (.zip):
+   * 1. Imagem PNG sempre com enquadramento perfeito do Estado selecionado (sem perder o foco de navegação)
+   * 2. Planilha ExcelJS estilizada com cores ARGB
+   * 3. Relatório Executivo em PDF de 2 Folhas (Folha 1: Mapa Colorido do Estado | Folha 2: Resumo e Legenda Completa)
+   */
   async function baixarPacoteFinal() {
     if (state.isExporting) return;
 
@@ -892,17 +948,31 @@ const App = (() => {
 
     try {
       btn.classList.add('opacity-75', 'cursor-wait');
-      btnText.textContent = 'Gerando print do mapa...';
+      btnText.textContent = 'Enquadrando Estado e capturando foto...';
 
-      const imageBlob = await MapManager.captureMapScreenshot();
+      // 1. Foto do mapa: sempre enquadra o estado selecionado (ou todas as cidades se nenhum estado estiver aberto)
+      const targetBounds = state.estadoBounds || null;
+      const captureResult = await MapManager.captureMapScreenshot(targetBounds);
 
-      btnText.textContent = 'Gerando planilha estilizada...';
+      // 2. Planilha Excel
+      btnText.textContent = 'Gerando planilha Excel...';
       const excelBuffer = await ExcelManager.generateStyledExcelBuffer(state.itensCadastrados);
 
-      btnText.textContent = 'Compactando arquivo .zip...';
-      await ExcelManager.downloadZipPackage(imageBlob, excelBuffer);
+      // 3. Relatório em PDF com 2 Folhas
+      btnText.textContent = 'Gerando PDF executivo (2 páginas)...';
+      const pdfBlob = await ExcelManager.generatePdfReport(
+        captureResult.dataUrl,
+        captureResult.width,
+        captureResult.height,
+        state.estadoSelecionado,
+        state.itensCadastrados
+      );
 
-      showToast('Pacote .zip gerado e baixado com sucesso!', 'success');
+      // 4. Compactação em .zip (PNG + XLSX + PDF)
+      btnText.textContent = 'Compactando arquivo .zip...';
+      await ExcelManager.downloadZipPackage(captureResult.blob, excelBuffer, pdfBlob);
+
+      showToast('Pacote .zip gerado com sucesso (Imagem + Excel + PDF 2 Folhas)!', 'success');
 
     } catch (err) {
       console.error(err);
@@ -946,7 +1016,7 @@ const App = (() => {
       tipo === 'success' ? 'bg-emerald-800 text-emerald-100 border-emerald-700' :
       tipo === 'error' ? 'bg-rose-800 text-rose-100 border-rose-700' :
       tipo === 'warning' ? 'bg-amber-800 text-amber-100 border-amber-700' :
-      'bg-gray-800 text-gray-100 border-gray-700'
+      'bg-slate-900 text-slate-100 border-slate-700'
     }`;
 
     const icon = tipo === 'success' ? '✓' : tipo === 'error' ? '✕' : tipo === 'warning' ? '⚠' : 'ℹ';

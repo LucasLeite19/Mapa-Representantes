@@ -21,42 +21,47 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/dom-to-image/2.6.0/dom-to-image.min.js"></script>
+  <!-- jsPDF e AutoTable para geração de relatórios PDF em 2 páginas -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 </head>
 <body class="bg-gray-100 text-gray-800 min-h-screen flex flex-col font-sans antialiased">
 
-  <!-- Header Superior -->
-  <header class="bg-gradient-to-r from-gray-900 via-gray-800 to-indigo-950 text-white shadow-lg border-b border-gray-700">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+  <!-- Header Superior Sólido Corporativo (Sem gradientes que somem no final) -->
+  <header class="bg-slate-900 text-white shadow-md border-b border-slate-800 w-full">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      
+      <!-- Marca e Título Corporativo -->
       <div class="flex items-center space-x-3">
-        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-md">
+        <div class="w-10 h-10 rounded-lg bg-indigo-600 flex items-center justify-center shadow">
           <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
           </svg>
         </div>
         <div>
-          <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-white flex items-center gap-2">
+          <h1 class="text-xl font-bold tracking-tight text-white flex items-center gap-2">
             Gestor de Representantes
-            <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-indigo-500 bg-opacity-30 text-indigo-300 border border-indigo-500 border-opacity-40">
-              Brasil
+            <span class="text-[11px] font-semibold px-2 py-0.5 rounded bg-indigo-500 bg-opacity-25 text-indigo-300 border border-indigo-400 border-opacity-30">
+              Corporativo
             </span>
           </h1>
-          <p class="text-xs text-gray-400">Distribuição territorial e malhas geográficas detalhadas (Suporte a até 6 Marcas)</p>
+          <p class="text-xs text-slate-400">Distribuição Territorial de Marcas e Representantes por Município</p>
         </div>
       </div>
 
       <!-- Métricas Rápidas & Botão Exportar -->
       <div class="flex flex-wrap items-center gap-3">
-        <div class="flex items-center bg-gray-800 bg-opacity-80 rounded-lg px-3 py-1.5 border border-gray-700 text-xs">
-          <span class="text-gray-400 mr-1.5">Municípios:</span>
+        <div class="flex items-center bg-slate-800 rounded-lg px-3 py-1.5 border border-slate-700 text-xs">
+          <span class="text-slate-400 mr-1.5">Municípios:</span>
           <span id="metricTotalCidades" class="font-bold text-emerald-400 text-sm">0</span>
         </div>
-        <div class="flex items-center bg-gray-800 bg-opacity-80 rounded-lg px-3 py-1.5 border border-gray-700 text-xs">
-          <span class="text-gray-400 mr-1.5">Representantes:</span>
+        <div class="flex items-center bg-slate-800 rounded-lg px-3 py-1.5 border border-slate-700 text-xs">
+          <span class="text-slate-400 mr-1.5">Representantes:</span>
           <span id="metricTotalReps" class="font-bold text-indigo-400 text-sm">0</span>
         </div>
         
-        <!-- Botão Baixar Pacote (.zip) -->
-        <button id="btnBaixarPacote" class="flex items-center space-x-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-medium px-4 py-2 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 transform active:scale-95 text-xs sm:text-sm">
+        <!-- Botão Baixar Pacote (.zip) com PNG, XLSX e PDF -->
+        <button id="btnBaixarPacote" class="flex items-center space-x-2 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold px-4 py-2 rounded-lg shadow transition-all duration-200 transform active:scale-95 text-xs sm:text-sm">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
           </svg>
@@ -65,6 +70,48 @@
       </div>
     </div>
   </header>
+
+  <!-- Sub-Header: 4 Botões Centralizados -->
+  <nav class="bg-white border-b border-gray-200 shadow-xs sticky top-0 z-30">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex items-center justify-center">
+      <div class="inline-flex flex-wrap items-center justify-center gap-2 sm:gap-3">
+        
+        <!-- Botão 1: Cadastro Manual -->
+        <button id="navBtnManual" class="px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold flex items-center gap-2 transition-all bg-indigo-600 text-white shadow-sm">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+          </svg>
+          <span>Cadastro Manual</span>
+        </button>
+
+        <!-- Botão 2: Importar Excel -->
+        <button id="navBtnExcel" class="px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold flex items-center gap-2 transition-all bg-gray-100 text-gray-700 hover:bg-gray-200">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+          <span>Importar Excel</span>
+        </button>
+
+        <!-- Botão 3: Sugestão de Divisões (Em Breve) -->
+        <button id="navBtnSugestoes" class="px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold flex items-center gap-2 transition-all bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200">
+          <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+          </svg>
+          <span>Sugestão de Divisões</span>
+          <span class="bg-indigo-200 text-indigo-800 text-[10px] font-bold px-1.5 py-0.5 rounded-full">Em Breve</span>
+        </button>
+
+        <!-- Botão 4: Ajuda (Guia de Uso) -->
+        <button id="navBtnAjuda" class="px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold flex items-center gap-2 transition-all bg-amber-50 text-amber-800 hover:bg-amber-100 border border-amber-200">
+          <svg class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span>Ajuda (Guia de Uso)</span>
+        </button>
+
+      </div>
+    </div>
+  </nav>
 
   <!-- Container Principal -->
   <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 w-full space-y-6">
@@ -238,9 +285,9 @@
             <svg class="w-4 h-4 text-amber-500" fill="currentColor" viewBox="0 0 20 20"><path d="M11 3a1 1 0 10-2 0v1a1 1 0 102 0V3zM15.657 5.757a1 1 0 00-1.414-1.414l-.707.707a1 1 0 001.414 1.414l.707-.707zM18 10a1 1 0 01-1 1h-1a1 1 0 110-2h1a1 1 0 011 1zM5.05 6.464A1 1 0 106.464 5.05l-.707-.707a1 1 0 00-1.414 1.414l.707.707zM5 10a1 1 0 01-1 1H3a1 1 0 110-2h1a1 1 0 011 1zM8 16v-1h4v1a2 2 0 11-4 0zM12 14H8a4 4 0 01-.82-7.916 4 4 0 017.64 0A4 4 0 0112 14z" /></svg>
             Navegação Interativa no Mapa
           </h3>
-          <p>• Ao selecionar o Estado, a fronteira é <strong>destacada</strong> e todas as <strong>divisões municipais</strong> são exibidas.</p>
-          <p>• <strong>Clique direto na cidade:</strong> você pode clicar em qualquer município no mapa para selecioná-lo de imediato.</p>
-          <p>• Cidades com mais de uma marca são exibidas com <strong>listras das cores correspondentes</strong>.</p>
+          <p>• <strong>Rótulo Inicial Compacto:</strong> O mapa exibe apenas Município e Representante para evitar poluição visual.</p>
+          <p>• <strong>Detalhamento no Hover ou Clique:</strong> Passe o mouse ou clique no município para ver todas as marcas, números e dados completos.</p>
+          <p>• <strong>Exportação Completa:</strong> O pacote .zip inclui a foto do Estado, o Excel estilizado e um <strong>PDF Executivo de 2 páginas</strong>.</p>
         </div>
 
       </div>
@@ -278,7 +325,7 @@
             </label>
 
             <!-- Botão Enquadrar -->
-            <button id="btnResetZoom" title="Reenquadrar visão" class="p-2 text-gray-600 hover:text-indigo-600 hover:bg-gray-100 rounded-lg border border-gray-200 transition-colors text-xs flex items-center gap-1 font-medium">
+            <button id="btnResetZoom" title="Reenquadrar visão do Estado" class="p-2 text-gray-600 hover:text-indigo-600 hover:bg-gray-100 rounded-lg border border-gray-200 transition-colors text-xs flex items-center gap-1 font-medium">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
               </svg>
@@ -304,14 +351,14 @@
           <div id="map"></div>
 
           <!-- Legenda Discreta no Canto Inferior Esquerdo -->
-          <div class="no-export absolute bottom-3 left-3 z-20 bg-gray-900 bg-opacity-85 text-white text-[11px] px-3 py-1.5 rounded-lg backdrop-filter blur-sm border border-gray-700 pointer-events-none flex flex-wrap items-center gap-2.5">
+          <div class="no-export absolute bottom-3 left-3 z-20 bg-slate-900 bg-opacity-90 text-white text-[11px] px-3 py-1.5 rounded-lg backdrop-filter blur-sm border border-slate-700 pointer-events-none flex flex-wrap items-center gap-2.5">
             <div class="flex items-center gap-1">
               <span class="w-2.5 h-2.5 rounded-full bg-indigo-500 border border-indigo-300 inline-block"></span>
               <span>Borda Estado</span>
             </div>
             <div class="flex items-center gap-1">
-              <span class="w-2.5 h-2.5 rounded-sm bg-white bg-opacity-30 border border-white inline-block"></span>
-              <span>Divisões (Clique na cidade)</span>
+              <span class="w-2.5 h-2.5 rounded-sm bg-cyan-400 border border-cyan-200 inline-block"></span>
+              <span>Divisões de Cidades</span>
             </div>
             <div class="flex items-center gap-1">
               <span class="w-2.5 h-2.5 rounded-full bg-amber-400 border border-amber-200 inline-block"></span>
@@ -418,9 +465,123 @@
     </div>
   </div>
 
+  <!-- Modal: Sugestão de Divisões de Representantes (Em Desenvolvimento) -->
+  <div id="modalSugestoes" class="fixed inset-0 bg-gray-900 bg-opacity-60 backdrop-filter blur-xs z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-gray-200 space-y-4">
+      <div class="flex items-center justify-between border-b border-gray-100 pb-3">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" /></svg>
+          </div>
+          <div>
+            <h3 class="text-base font-bold text-gray-800">Sugestão de Divisões Territoriais</h3>
+            <span class="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full border border-indigo-200">Em Desenvolvimento</span>
+          </div>
+        </div>
+        <button id="btnFecharModalSugestoes" class="text-gray-400 hover:text-gray-600 text-2xl font-bold leading-none">&times;</button>
+      </div>
+
+      <div class="space-y-3 text-xs text-gray-600">
+        <p class="text-gray-800 font-semibold">
+          Estamos criando um algoritmo inteligente de balanceamento comercial para automação territorial!
+        </p>
+        <div class="bg-gray-50 p-3.5 rounded-xl border border-gray-200 space-y-2">
+          <div class="flex items-start gap-2">
+            <span class="text-indigo-600 font-bold">•</span>
+            <span><strong>Balanceamento por Proximidade:</strong> Divisão em clusters geográficos (k-means) para que cada representante atue em cidades vizinhas sem cruzar rotas.</span>
+          </div>
+          <div class="flex items-start gap-2">
+            <span class="text-indigo-600 font-bold">•</span>
+            <span><strong>Equilíbrio Populacional:</strong> Distribuição proporcional baseada na população oficial do Censo IBGE.</span>
+          </div>
+          <div class="flex items-start gap-2">
+            <span class="text-indigo-600 font-bold">•</span>
+            <span><strong>Atribuição por Marcas:</strong> Sugestões automáticas respeitando especialidades por marca.</span>
+          </div>
+        </div>
+        <p class="text-gray-500">Essa funcionalidade será lançada nas próximas atualizações para apoiar a estratégia de expansão comercial.</p>
+      </div>
+
+      <div class="pt-2 flex justify-end">
+        <button onclick="document.getElementById('modalSugestoes').classList.add('hidden')" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-4 py-2 rounded-lg text-xs transition-colors">
+          Entendi
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Ajuda (Guia de Uso Completo do Site) -->
+  <div id="modalAjuda" class="fixed inset-0 bg-gray-900 bg-opacity-60 backdrop-filter blur-xs z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-2xl border border-gray-200 space-y-4 max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between border-b border-gray-100 pb-3">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+          </div>
+          <div>
+            <h3 class="text-base font-bold text-gray-800">Guia Prático de Utilização</h3>
+            <p class="text-xs text-gray-500">Aprenda a operar o gestor territorial de ponta a ponta</p>
+          </div>
+        </div>
+        <button id="btnFecharModalAjuda" class="text-gray-400 hover:text-gray-600 text-2xl font-bold leading-none">&times;</button>
+      </div>
+
+      <div class="space-y-4 text-xs text-gray-600">
+        
+        <!-- Passo 1 -->
+        <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-1">
+          <h4 class="font-bold text-slate-800 flex items-center gap-1.5 text-sm">
+            <span class="w-5 h-5 rounded-full bg-slate-900 text-white flex items-center justify-center text-xs">1</span>
+            Seleção do Estado e Visão Detalhada
+          </h4>
+          <p>Ao selecionar um Estado no menu, o mapa enquadra a região imediatamente, desenha a <strong>fronteira externa do Estado</strong> e carrega as <strong>linhas divisórias de todos os municípios</strong>. As cores das linhas se adaptam automaticamente ao mapa escolhido (Satélite, OpenStreetMap, Google ou CartoDB).</p>
+        </div>
+
+        <!-- Passo 2 -->
+        <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-1">
+          <h4 class="font-bold text-slate-800 flex items-center gap-1.5 text-sm">
+            <span class="w-5 h-5 rounded-full bg-slate-900 text-white flex items-center justify-center text-xs">2</span>
+            Cadastro com 1 Clique Direto no Mapa
+          </h4>
+          <p>Você pode selecionar cidades pelo formulário ou <strong>clicando diretamente sobre a cidade no mapa</strong>. Ela acenderá com contorno amarelo pontilhado pronta para receber o representante.</p>
+        </div>
+
+        <!-- Passo 3 -->
+        <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-1">
+          <h4 class="font-bold text-slate-800 flex items-center gap-1.5 text-sm">
+            <span class="w-5 h-5 rounded-full bg-slate-900 text-white flex items-center justify-center text-xs">3</span>
+            Múltiplas Marcas (Até 6 Marcas por Cidade)
+          </h4>
+          <p>Cada município aceita até 6 marcas diferentes. Cidades com mais de uma marca são exibidas com <strong>padrão de listras diagonais</strong> contendo as cores de cada marca. Os nomes das 6 marcas podem ser renomeados pelo botão <em>"Renomear"</em>.</p>
+        </div>
+
+        <!-- Passo 4 -->
+        <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-1">
+          <h4 class="font-bold text-slate-800 flex items-center gap-1.5 text-sm">
+            <span class="w-5 h-5 rounded-full bg-slate-900 text-white flex items-center justify-center text-xs">4</span>
+            Exportação do Pacote (.zip) Completo
+          </h4>
+          <p>O botão <strong>Baixar Pacote (.zip)</strong> sempre centraliza e fotografa o Estado selecionado de ponta a ponta e empacota 3 arquivos:</p>
+          <ul class="list-disc list-inside space-y-0.5 pl-2 text-slate-700">
+            <li><strong>mapa_representantes.png:</strong> Foto em alta resolução do mapa do Estado.</li>
+            <li><strong>tabela_representantes.xlsx:</strong> Planilha Excel com células coloridas em ARGB e marcas.</li>
+            <li><strong>relatorio_representantes.pdf:</strong> Documento Executivo de 2 páginas (Folha 1 com o Mapa Colorido do Estado e Folha 2 com a Legenda Completa).</li>
+          </ul>
+        </div>
+
+      </div>
+
+      <div class="pt-2 flex justify-end">
+        <button onclick="document.getElementById('modalAjuda').classList.add('hidden')" class="bg-slate-900 hover:bg-slate-800 text-white font-semibold px-4 py-2 rounded-lg text-xs transition-colors">
+          Fechar Guia
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- Footer -->
   <footer class="bg-white border-t border-gray-200 py-4 text-center text-xs text-gray-500">
-    <p>Gestor Territorial de Representantes &bull; Dados geográficos providos pelo IBGE &bull; Memória volátil (dados apagados ao fechar)</p>
+    <p>Gestor Territorial Corporativo &bull; Dados geográficos providos pelo IBGE &bull; Memória volátil (100% em memória)</p>
   </footer>
 
   <!-- Modal de Progresso da Importação em Massa -->

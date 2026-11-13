@@ -1,9 +1,12 @@
 /**
- * MÓDULO: EXCEL & ZIP MANAGER
+ * MÓDULO: EXCEL, PDF & ZIP MANAGER
  * Responsável por:
  * 1. SheetJS: Geração e leitura da planilha modelo com suporte a Marcas (.xlsx).
  * 2. ExcelJS: Geração da planilha final estilizada (célula Cor em ARGB, coluna Marca e Representante colorido em negrito).
- * 3. JSZip & FileSaver.js: Empacotamento do print do mapa e da planilha em um arquivo .zip.
+ * 3. jsPDF & autoTable: Geração do Relatório Executivo em PDF com 2 páginas:
+ *    - Folha 1: Foto do Estado com mapa colorido e números.
+ *    - Folha 2: Legenda com o resumo detalhado (Nº, Cor preenchida, Município, Marca e Representante).
+ * 4. JSZip & FileSaver.js: Empacotamento do PNG, XLSX e PDF em um único arquivo .zip.
  */
 
 const ExcelManager = (() => {
@@ -16,6 +19,20 @@ const ExcelManager = (() => {
     return 'FF000000';
   }
 
+  function hexToRgb(hex) {
+    if (!hex) return { r: 59, g: 130, b: 246 };
+    const clean = hex.replace('#', '').trim();
+    if (clean.length === 6) {
+      const bigint = parseInt(clean, 16);
+      return {
+        r: (bigint >> 16) & 255,
+        g: (bigint >> 8) & 255,
+        b: bigint & 255
+      };
+    }
+    return { r: 59, g: 130, b: 246 };
+  }
+
   /**
    * Baixa a Planilha Modelo para o Estado Selecionado com a coluna "Marca" (SheetJS)
    */
@@ -26,7 +43,6 @@ const ExcelManager = (() => {
 
     const marcaPadrao = marcasDisponiveis && marcasDisponiveis[0] ? marcasDisponiveis[0].nome : 'Marca 1';
 
-    // Colunas: ID IBGE, Estado, Município, Marca, Representante, Cor Hex
     const rows = municipios.map(m => {
       return {
         'ID IBGE': m.id,
@@ -70,7 +86,6 @@ const ExcelManager = (() => {
       throw new Error('A planilha está vazia.');
     }
 
-    // Filtrar apenas linhas com "Representante" e "ID IBGE" preenchidos
     const validRows = rows.filter(row => {
       const rep = row['Representante'] || row['representante'] || row['REPRESENTANTE'];
       const id = row['ID IBGE'] || row['ID'] || row['IBGE'] || row['id_ibge'] || row['Codigo'];
@@ -92,7 +107,6 @@ const ExcelManager = (() => {
       views: [{ showGridLines: true }]
     });
 
-    // Colunas: Nº, Cor, Estado, Município, Marca, Representante
     sheet.columns = [
       { header: 'Nº', key: 'seq', width: 8 },
       { header: 'Cor', key: 'cor', width: 12 },
@@ -102,7 +116,6 @@ const ExcelManager = (() => {
       { header: 'Representante', key: 'representante', width: 30 }
     ];
 
-    // Estilo do Cabeçalho
     const headerRow = sheet.getRow(1);
     headerRow.height = 28;
     headerRow.eachCell(cell => {
@@ -110,18 +123,17 @@ const ExcelManager = (() => {
       cell.fill = {
         type: 'pattern',
         pattern: 'solid',
-        fgColor: { argb: 'FF1F2937' } // Gray-800
+        fgColor: { argb: 'FF0F172A' } // Slate-900 Corporativo
       };
       cell.alignment = { vertical: 'middle', horizontal: 'center' };
       cell.border = {
-        top: { style: 'thin', color: { argb: 'FF374151' } },
-        bottom: { style: 'medium', color: { argb: 'FF111827' } },
-        left: { style: 'thin', color: { argb: 'FF374151' } },
-        right: { style: 'thin', color: { argb: 'FF374151' } }
+        top: { style: 'thin', color: { argb: 'FF334155' } },
+        bottom: { style: 'medium', color: { argb: 'FF0F172A' } },
+        left: { style: 'thin', color: { argb: 'FF334155' } },
+        right: { style: 'thin', color: { argb: 'FF334155' } }
       };
     });
 
-    // Ordenar pelo sequencial Nº crescente do mapa
     const itensOrdenados = [...itensCadastrados].sort((a, b) => a.seqId - b.seqId);
 
     itensOrdenados.forEach(item => {
@@ -138,12 +150,12 @@ const ExcelManager = (() => {
 
       row.height = 22;
 
-      // Célula Nº
+      // Nº
       const cellSeq = row.getCell('seq');
       cellSeq.alignment = { vertical: 'middle', horizontal: 'center' };
       cellSeq.font = { bold: true, size: 10, color: { argb: 'FF374151' } };
 
-      // Célula Cor: Fundo pintado com a cor exata em ARGB, sem texto
+      // Cor de fundo exata em ARGB
       const cellCor = row.getCell('cor');
       cellCor.fill = {
         type: 'pattern',
@@ -151,22 +163,22 @@ const ExcelManager = (() => {
         fgColor: { argb: argbColor }
       };
 
-      // Célula Estado
+      // Estado
       const cellEstado = row.getCell('estado');
       cellEstado.alignment = { vertical: 'middle', horizontal: 'center' };
       cellEstado.font = { bold: true, size: 10, color: { argb: 'FF4F46E5' } };
 
-      // Célula Município
+      // Município
       const cellMun = row.getCell('municipio');
       cellMun.alignment = { vertical: 'middle', horizontal: 'left' };
       cellMun.font = { size: 10, color: { argb: 'FF111827' } };
 
-      // Célula Marca
+      // Marca
       const cellMarca = row.getCell('marca');
       cellMarca.alignment = { vertical: 'middle', horizontal: 'center' };
       cellMarca.font = { bold: true, size: 10, color: { argb: 'FF4B5563' } };
 
-      // Célula Representante: Escrito com a MESMA COR em NEGRITO
+      // Representante com texto na mesma cor em negrito
       const cellRep = row.getCell('representante');
       cellRep.alignment = { vertical: 'middle', horizontal: 'left' };
       cellRep.font = {
@@ -189,13 +201,173 @@ const ExcelManager = (() => {
   }
 
   /**
-   * Empacota o print do mapa e a planilha Excel em .zip e inicia o download
+   * Gera o Relatório Executivo em PDF em 2 páginas:
+   * - Folha 1: Mapa do Estado com números e malhas coloridas
+   * - Folha 2: Resumo e Legenda Executiva (Nº, Cor preenchida, Município, Marca e Representante)
    */
-  async function downloadZipPackage(imageBlob, excelBuffer) {
+  async function generatePdfReport(mapDataUrl, mapWidth, mapHeight, stateInfo, itensCadastrados) {
+    if (!window.jspdf || !window.jspdf.jsPDF) {
+      throw new Error('Biblioteca jsPDF não carregada.');
+    }
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({
+      orientation: 'landscape',
+      unit: 'mm',
+      format: 'a4'
+    });
+
+    const pageWidth = doc.internal.pageSize.getWidth();   // 297 mm
+    const pageHeight = doc.internal.pageSize.getHeight(); // 210 mm
+    const today = new Date().toLocaleDateString('pt-BR');
+    const now = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+    const estadoNome = stateInfo ? `${stateInfo.nome} (${stateInfo.sigla})` : 'Brasil';
+    const totalCidades = new Set(itensCadastrados.map(it => String(it.municipioId))).size;
+    const totalReps = new Set(itensCadastrados.map(it => it.representante.toLowerCase())).size;
+
+    // ==========================================
+    // FOLHA 1: MAPA COLORIDO DO ESTADO
+    // ==========================================
+    doc.setFillColor(15, 23, 42); // Slate 900 Corporativo
+    doc.rect(0, 0, pageWidth, 28, 'F');
+
+    // Título Superior
+    doc.setTextColor(255, 255, 255);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(15);
+    doc.text('GESTOR DE REPRESENTANTES - MAPA TERRITORIAL', 14, 12);
+
+    // Subtítulo
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9.5);
+    doc.setTextColor(203, 213, 225);
+    doc.text(`Estado: ${estadoNome}  |  Emissão: ${today} às ${now}`, 14, 21);
+
+    // Métricas no canto direito
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9.5);
+    doc.setTextColor(255, 255, 255);
+    doc.text(`Municípios Cadastrados: ${totalCidades}   |   Representantes: ${totalReps}`, pageWidth - 14, 16, { align: 'right' });
+
+    // Enquadramento da Imagem do Mapa na Folha 1
+    const maxW = 269;
+    const maxH = 162;
+    const imgRatio = mapWidth / mapHeight;
+    let renderW = maxW;
+    let renderH = maxW / imgRatio;
+    if (renderH > maxH) {
+      renderH = maxH;
+      renderW = maxH * imgRatio;
+    }
+    const posX = (pageWidth - renderW) / 2;
+    const posY = 33 + (maxH - renderH) / 2;
+
+    doc.setDrawColor(203, 213, 225);
+    doc.setLineWidth(0.4);
+    doc.rect(posX - 0.5, posY - 0.5, renderW + 1, renderH + 1);
+
+    doc.addImage(mapDataUrl, 'PNG', posX, posY, renderW, renderH);
+
+    // Rodapé Folha 1
+    doc.setFontSize(8);
+    doc.setTextColor(148, 163, 184);
+    doc.text('Documento Oficial de Distribuição Comercial  |  Página 1 de 2', 14, 204);
+
+    // ==========================================
+    // FOLHA 2: RESUMO EXECUTIVO E LEGENDA
+    // ==========================================
+    doc.addPage('a4', 'landscape');
+
+    // Cabeçalho Folha 2
+    doc.setFillColor(15, 23, 42);
+    doc.rect(0, 0, pageWidth, 28, 'F');
+
+    doc.setTextColor(255, 255, 255);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(15);
+    doc.text('LEGENDA E RESUMO EXECUTIVO DOS REPRESENTANTES', 14, 12);
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9.5);
+    doc.setTextColor(203, 213, 225);
+    doc.text(`Relação detalhada dos municípios cadastrados, marcas e representantes  |  Estado: ${estadoNome}`, 14, 21);
+
+    // Tabela Executiva
+    const tableData = [...itensCadastrados]
+      .sort((a, b) => a.seqId - b.seqId)
+      .map(it => [
+        `Nº ${it.seqId}`,
+        it.cor, // Hex usado no didDrawCell para desenhar o quadrado colorido
+        it.estadoSigla,
+        it.municipioNome,
+        it.marcaNome,
+        it.representante
+      ]);
+
+    doc.autoTable({
+      startY: 34,
+      margin: { left: 14, right: 14 },
+      head: [['Nº', 'Cor', 'Estado', 'Município', 'Marca', 'Representante']],
+      body: tableData,
+      theme: 'striped',
+      headStyles: {
+        fillColor: [15, 23, 42],
+        textColor: [255, 255, 255],
+        fontStyle: 'bold',
+        halign: 'center',
+        fontSize: 9
+      },
+      bodyStyles: {
+        fontSize: 8.5,
+        textColor: [30, 41, 59],
+        valign: 'middle'
+      },
+      columnStyles: {
+        0: { halign: 'center', cellWidth: 18, fontStyle: 'bold' },
+        1: { halign: 'center', cellWidth: 18 },
+        2: { halign: 'center', cellWidth: 20 },
+        3: { cellWidth: 65, fontStyle: 'bold' },
+        4: { halign: 'center', cellWidth: 40 },
+        5: { cellWidth: 80 }
+      },
+      didDrawCell: function (data) {
+        if (data.section === 'body' && data.column.index === 1) {
+          const hex = data.cell.raw;
+          if (hex && typeof hex === 'string') {
+            const rgb = hexToRgb(hex);
+            doc.setFillColor(rgb.r, rgb.g, rgb.b);
+            doc.setDrawColor(30, 41, 59);
+            doc.setLineWidth(0.3);
+            const size = 5;
+            const x = data.cell.x + (data.cell.width - size) / 2;
+            const y = data.cell.y + (data.cell.height - size) / 2;
+            doc.roundedRect(x, y, size, size, 1, 1, 'FD');
+          }
+        }
+      }
+    });
+
+    // Rodapé Folha 2
+    const finalY = doc.internal.pageSize.getHeight() - 6;
+    doc.setFontSize(8);
+    doc.setTextColor(148, 163, 184);
+    doc.text('Documento Oficial de Distribuição Comercial  |  Página 2 de 2', 14, finalY);
+
+    return doc.output('blob');
+  }
+
+  /**
+   * Empacota o PNG, XLSX e PDF em .zip e inicia o download
+   */
+  async function downloadZipPackage(imageBlob, excelBuffer, pdfBlob) {
     const zip = new JSZip();
 
     zip.file('mapa_representantes.png', imageBlob);
     zip.file('tabela_representantes.xlsx', excelBuffer);
+    if (pdfBlob) {
+      zip.file('relatorio_representantes.pdf', pdfBlob);
+    }
 
     const zipBlob = await zip.generateAsync({
       type: 'blob',
@@ -211,6 +383,7 @@ const ExcelManager = (() => {
     downloadTemplate,
     readImportFile,
     generateStyledExcelBuffer,
+    generatePdfReport,
     downloadZipPackage
   };
 })();
