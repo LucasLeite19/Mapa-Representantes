@@ -78,41 +78,32 @@ const App = (() => {
    * Alterna entre modo manual e modo importar excel
    */
   function setAbaAtiva(modo) {
-    const tabManual = document.getElementById('tabManual');
-    const tabMassa = document.getElementById('tabMassa');
     const contentManual = document.getElementById('contentManual');
     const contentMassa = document.getElementById('contentMassa');
     const navBtnManual = document.getElementById('navBtnManual');
     const navBtnExcel = document.getElementById('navBtnExcel');
+    const cardHeaderTitle = document.getElementById('cardHeaderTitle');
+    const cardHeaderBadge = document.getElementById('cardHeaderBadge');
+
+    const activeClasses = 'px-4 py-2 rounded-lg text-xs sm:text-sm font-bold flex items-center gap-2 transition-all bg-slate-900 text-white shadow-xs';
+    const inactiveClasses = 'px-4 py-2 rounded-lg text-xs sm:text-sm font-bold flex items-center gap-2 transition-all bg-white text-gray-800 hover:bg-gray-50 border border-gray-300';
 
     if (modo === 'manual') {
-      if (tabManual) tabManual.className = 'flex-1 py-3 px-4 text-xs sm:text-sm font-semibold border-b-2 border-indigo-600 text-indigo-600 flex items-center justify-center gap-1.5 transition-colors';
-      if (tabMassa) tabMassa.className = 'flex-1 py-3 px-4 text-xs sm:text-sm font-semibold border-b-2 border-transparent text-gray-500 hover:text-gray-700 flex items-center justify-center gap-1.5 transition-colors';
       if (contentManual) contentManual.classList.remove('hidden');
       if (contentMassa) contentMassa.classList.add('hidden');
+      if (cardHeaderTitle) cardHeaderTitle.textContent = 'Cadastro Manual de Representante';
+      if (cardHeaderBadge) cardHeaderBadge.textContent = 'Passo a Passo';
 
-      if (navBtnManual) {
-        navBtnManual.classList.add('bg-indigo-600', 'text-white', 'shadow-sm');
-        navBtnManual.classList.remove('bg-gray-100', 'text-gray-700', 'hover:bg-gray-200');
-      }
-      if (navBtnExcel) {
-        navBtnExcel.classList.remove('bg-indigo-600', 'text-white', 'shadow-sm');
-        navBtnExcel.classList.add('bg-gray-100', 'text-gray-700', 'hover:bg-gray-200');
-      }
+      if (navBtnManual) navBtnManual.className = activeClasses;
+      if (navBtnExcel) navBtnExcel.className = inactiveClasses;
     } else {
-      if (tabMassa) tabMassa.className = 'flex-1 py-3 px-4 text-xs sm:text-sm font-semibold border-b-2 border-indigo-600 text-indigo-600 flex items-center justify-center gap-1.5 transition-colors';
-      if (tabManual) tabManual.className = 'flex-1 py-3 px-4 text-xs sm:text-sm font-semibold border-b-2 border-transparent text-gray-500 hover:text-gray-700 flex items-center justify-center gap-1.5 transition-colors';
       if (contentMassa) contentMassa.classList.remove('hidden');
       if (contentManual) contentManual.classList.add('hidden');
+      if (cardHeaderTitle) cardHeaderTitle.textContent = 'Importação em Massa via Excel';
+      if (cardHeaderBadge) cardHeaderBadge.textContent = 'Lote de Cidades';
 
-      if (navBtnExcel) {
-        navBtnExcel.classList.add('bg-indigo-600', 'text-white', 'shadow-sm');
-        navBtnExcel.classList.remove('bg-gray-100', 'text-gray-700', 'hover:bg-gray-200');
-      }
-      if (navBtnManual) {
-        navBtnManual.classList.remove('bg-indigo-600', 'text-white', 'shadow-sm');
-        navBtnManual.classList.add('bg-gray-100', 'text-gray-700', 'hover:bg-gray-200');
-      }
+      if (navBtnExcel) navBtnExcel.className = activeClasses;
+      if (navBtnManual) navBtnManual.className = inactiveClasses;
     }
   }
 

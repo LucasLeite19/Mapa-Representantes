@@ -1,5 +1,6 @@
 /* ==========================================================================
    GESTOR DE REPRESENTANTES - ESTILOS PERSONALIZADOS
+   Paleta Clara, Tranquila e de Alta Legibilidade
    ========================================================================== */
 
 /* Altura fixa e garantida do container do mapa */
@@ -8,11 +9,11 @@
   width: 100%;
   height: 560px;
   min-height: 560px;
-  background-color: #1f2937;
+  background-color: #f8fafc;
   border-radius: 0.75rem;
   overflow: hidden;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  border: 1px solid #d1d5db;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  border: 1px solid #cbd5e1;
 }
 
 #map {
@@ -44,10 +45,10 @@
 
 /* Rótulo Compacto Permanente no Mapa (Apenas Município e Representante) */
 .rep-compact-tooltip {
-  background: rgba(15, 23, 42, 0.88) !important;
-  border: 1px solid rgba(255, 255, 255, 0.4) !important;
+  background: rgba(15, 23, 42, 0.9) !important;
+  border: 1px solid rgba(255, 255, 255, 0.45) !important;
   border-radius: 5px !important;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4) !important;
   padding: 2px 6px !important;
   color: #ffffff !important;
   pointer-events: none !important;
@@ -73,9 +74,9 @@
 /* Card / Tooltip Detalhado no Hover ou Clique */
 .rep-custom-tooltip {
   background: rgba(15, 23, 42, 0.96) !important;
-  border: 1px solid rgba(255, 255, 255, 0.45) !important;
+  border: 1px solid rgba(255, 255, 255, 0.4) !important;
   border-radius: 8px !important;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.65) !important;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5) !important;
   padding: 6px 9px !important;
   color: #ffffff !important;
   pointer-events: none !important;
@@ -97,7 +98,7 @@
 }
 
 .rep-marker-city-title {
-  color: #f3f4f6;
+  color: #f8fafc;
   font-size: 11px;
   font-weight: 800;
   text-align: center;
@@ -121,12 +122,12 @@
 }
 
 /* Badges de cores das Marcas 1 a 6 */
-.brand-1 { background-color: #3b82f6; } /* Azul */
-.brand-2 { background-color: #ef4444; } /* Vermelho */
-.brand-3 { background-color: #10b981; } /* Verde Esmeralda */
-.brand-4 { background-color: #f59e0b; color: #111827 !important; } /* Âmbar */
-.brand-5 { background-color: #8b5cf6; } /* Roxo */
-.brand-6 { background-color: #ec4899; } /* Rosa */
+.brand-1 { background-color: #2563eb; } /* Azul */
+.brand-2 { background-color: #dc2626; } /* Vermelho */
+.brand-3 { background-color: #059669; } /* Verde Esmeralda */
+.brand-4 { background-color: #d97706; color: #ffffff !important; } /* Âmbar */
+.brand-5 { background-color: #7c3aed; } /* Roxo */
+.brand-6 { background-color: #db2777; } /* Rosa */
 
 /* Popup Leaflet Estilizado */
 .leaflet-popup-content-wrapper {
@@ -134,7 +135,7 @@
   color: #ffffff !important;
   border: 1px solid rgba(255, 255, 255, 0.3) !important;
   border-radius: 10px !important;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.6) !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5) !important;
   backdrop-filter: blur(6px) !important;
   padding: 0 !important;
 }
@@ -156,7 +157,7 @@
   color: #ffffff !important;
 }
 
-/* Tooltip leve ao passar o mouse sobre divisões municipais */
+/* Tooltip ao passar o mouse sobre cidades da divisão municipal */
 .city-hover-tooltip {
   background: rgba(15, 23, 42, 0.92) !important;
   border: 1px solid rgba(56, 189, 248, 0.6) !important;
@@ -165,36 +166,35 @@
   color: #ffffff !important;
   font-size: 11px !important;
   font-weight: 700 !important;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.45) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35) !important;
   pointer-events: none !important;
-  backdrop-filter: blur(3px);
 }
 .city-hover-tooltip::before {
   display: none !important;
 }
 
-/* Controles de camadas ativas */
+/* Botões de Camadas Ativas e Inativas com visual calmo */
 .btn-tile-active {
-  background-color: #4f46e5 !important;
+  background-color: #0f172a !important;
   color: #ffffff !important;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.1);
 }
 
 .btn-tile-inactive {
-  background-color: #f3f4f6 !important;
-  color: #374151 !important;
+  background-color: #f1f5f9 !important;
+  color: #334155 !important;
 }
 .btn-tile-inactive:hover {
-  background-color: #e5e7eb !important;
+  background-color: #e2e8f0 !important;
 }
 
-/* Scrollbar elegante */
+/* Scrollbars limpos */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #f1f5f9;
+  background: #f8fafc;
 }
 ::-webkit-scrollbar-thumb {
   background: #cbd5e1;
@@ -204,7 +204,6 @@
   background: #94a3b8;
 }
 
-/* Cursor de espera durante exportação */
 .cursor-wait {
   cursor: wait !important;
 }
