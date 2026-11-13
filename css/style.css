@@ -98,18 +98,21 @@
   border: none !important;
 }
 
-/* Rótulo Compacto Permanente no Mapa (Apenas Município e Representante) */
+/* Rótulo Compacto Verticalizado no Mapa (Município e Representante estreitos) */
 .rep-compact-tooltip {
-  background: rgba(15, 23, 42, 0.92) !important;
-  border: 1px solid rgba(255, 255, 255, 0.45) !important;
-  border-radius: 5px !important;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4) !important;
-  padding: 2px 6px !important;
+  background: rgba(15, 23, 42, 0.88) !important;
+  border: 1px solid rgba(255, 255, 255, 0.4) !important;
+  border-radius: 4px !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.45) !important;
+  padding: 1px 3px !important;
   color: #ffffff !important;
   pointer-events: none !important;
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-  white-space: nowrap !important;
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  white-space: normal !important;
+  max-width: 72px !important;
+  min-width: 32px !important;
+  text-align: center !important;
 }
 
 .rep-compact-tooltip::before {
@@ -121,9 +124,32 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 1px;
-  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  line-height: 1.15;
+  gap: 0px;
+  line-height: 1.05;
+  text-align: center;
+  word-break: break-word;
+}
+
+.rep-compact-city {
+  font-size: 8px;
+  font-weight: 800;
+  color: #ffffff;
+  line-height: 1.05;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
+}
+
+.rep-compact-rep {
+  font-size: 7.5px;
+  font-weight: 700;
+  color: #fde047;
+  line-height: 1.0;
+  margin-top: 1px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
+}
+
+/* Ocultar rótulos compactos quando o usuário desmarcar a opção de rótulos */
+.hide-map-tooltips .rep-compact-tooltip {
+  display: none !important;
 }
 
 /* Card / Tooltip Detalhado no Hover ou Clique */

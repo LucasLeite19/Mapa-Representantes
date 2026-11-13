@@ -336,15 +336,15 @@ const MapManager = (() => {
   }
 
   /**
-   * RÓTULO COMPACTO PERMANENTE: Apenas Município e Representante(s)
-   * Evita sobreposições e poluição visual no mapa
+   * RÓTULO COMPACTO VERTICALIZADO: Município e Representante(s) estreitos
+   * Quebra em linhas e ocupa uma área reduzida para evitar sobreposições
    */
   function buildCompactTooltipHtml(cidadeNome, itensDaCidade) {
     const nomesReps = [...new Set(itensDaCidade.map(it => it.representante))].join(', ');
     return `
       <div class="rep-compact-label">
-        <span class="font-extrabold text-white text-[10px]">${escapeHtml(cidadeNome)}</span>
-        <span class="text-amber-300 font-bold text-[9px]">${escapeHtml(nomesReps)}</span>
+        <span class="rep-compact-city">${escapeHtml(cidadeNome)}</span>
+        <span class="rep-compact-rep">${escapeHtml(nomesReps)}</span>
       </div>
     `;
   }
@@ -526,6 +526,7 @@ const MapManager = (() => {
     const iconExpand = document.getElementById('iconExpand');
     const iconCompress = document.getElementById('iconCompress');
     const textFullScreen = document.getElementById('textFullScreen');
+    const floatingToolbar = document.getElementById('floatingFullscreenToolbar');
 
     isFullscreen = !isFullscreen;
 
@@ -534,11 +535,13 @@ const MapManager = (() => {
       if (iconExpand) iconExpand.classList.add('hidden');
       if (iconCompress) iconCompress.classList.remove('hidden');
       if (textFullScreen) textFullScreen.textContent = 'Sair';
+      if (floatingToolbar) floatingToolbar.classList.remove('hidden');
     } else {
       wrapper.classList.remove('map-fullscreen');
       if (iconExpand) iconExpand.classList.remove('hidden');
       if (iconCompress) iconCompress.classList.add('hidden');
       if (textFullScreen) textFullScreen.textContent = 'Tela Cheia';
+      if (floatingToolbar) floatingToolbar.classList.add('hidden');
     }
 
     setTimeout(() => {
@@ -546,6 +549,19 @@ const MapManager = (() => {
     }, 200);
 
     return isFullscreen;
+  }
+
+  /**
+   * Alterna a visibilidade dos rótulos compactos sobre as cidades
+   */
+  function toggleTooltips(visible) {
+    const mapElement = document.getElementById('map');
+    if (!mapElement) return;
+    if (visible) {
+      mapElement.classList.remove('hide-map-tooltips');
+    } else {
+      mapElement.classList.add('hide-map-tooltips');
+    }
   }
 
   /**
@@ -645,6 +661,7 @@ const MapManager = (() => {
     fitAllRegisteredCities,
     resetToBrasil,
     toggleFullScreen,
+    toggleTooltips,
     captureMapScreenshot,
     getCityLayer: (mId) => cityLayersMap.get(String(mId)),
     getMapInstance: () => map

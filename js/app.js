@@ -158,11 +158,37 @@ const App = (() => {
       onMunicipioChange(e.target.value);
     });
 
-    // Checkbox de divisões municipais
+    // Checkbox de divisões municipais (Barra principal e Tela Cheia)
     const checkDivisoes = document.getElementById('checkDivisoesCidades');
+    const checkDivisoesFull = document.getElementById('checkDivisoesFullscreen');
     if (checkDivisoes) {
       checkDivisoes.addEventListener('change', (e) => {
+        if (checkDivisoesFull) checkDivisoesFull.checked = e.target.checked;
         MapManager.toggleMunicipalDivisions(e.target.checked);
+      });
+    }
+    if (checkDivisoesFull) {
+      checkDivisoesFull.addEventListener('change', (e) => {
+        if (checkDivisoes) checkDivisoes.checked = e.target.checked;
+        MapManager.toggleMunicipalDivisions(e.target.checked);
+      });
+    }
+
+    // Checkbox de Rótulos no Mapa (Barra principal e Tela Cheia)
+    const checkRotulos = document.getElementById('checkRotulosMapa');
+    const checkRotulosFull = document.getElementById('checkRotulosFullscreen');
+    if (checkRotulos) {
+      checkRotulos.addEventListener('change', (e) => {
+        const val = e.target.checked;
+        if (checkRotulosFull) checkRotulosFull.checked = val;
+        MapManager.toggleTooltips(val);
+      });
+    }
+    if (checkRotulosFull) {
+      checkRotulosFull.addEventListener('change', (e) => {
+        const val = e.target.checked;
+        if (checkRotulos) checkRotulos.checked = val;
+        MapManager.toggleTooltips(val);
       });
     }
 
@@ -211,8 +237,8 @@ const App = (() => {
       });
     });
 
-    // Botão Enquadrar (Reset Zoom)
-    document.getElementById('btnResetZoom').addEventListener('click', () => {
+    // Botão Enquadrar (Reset Zoom) - Principal e Tela Cheia
+    const handleResetZoom = () => {
       if (state.estadoBounds) {
         MapManager.fitToBounds(state.estadoBounds);
       } else if (state.itensCadastrados.length > 0) {
@@ -220,12 +246,23 @@ const App = (() => {
       } else {
         MapManager.resetToBrasil();
       }
-    });
+    };
+    document.getElementById('btnResetZoom').addEventListener('click', handleResetZoom);
+    const btnResetZoomFull = document.getElementById('btnResetZoomFullscreen');
+    if (btnResetZoomFull) {
+      btnResetZoomFull.addEventListener('click', handleResetZoom);
+    }
 
-    // Botão Tela Cheia
+    // Botão Tela Cheia (Alternância e Botão Flutuante de Sair)
     document.getElementById('btnFullScreen').addEventListener('click', () => {
       MapManager.toggleFullScreen();
     });
+    const btnExitFull = document.getElementById('btnExitFullScreenFloating');
+    if (btnExitFull) {
+      btnExitFull.addEventListener('click', () => {
+        MapManager.toggleFullScreen();
+      });
+    }
 
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
