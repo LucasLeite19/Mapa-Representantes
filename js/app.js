@@ -36,6 +36,7 @@ const App = (() => {
     await carregarEstados();
     renderTabela();
     atualizarMetricas();
+    atualizarResumoLateral();
   }
 
   /**
@@ -239,6 +240,33 @@ const App = (() => {
     // Busca Rápida na Tabela
     document.getElementById('inputBuscaTabela').addEventListener('input', renderTabela);
 
+    // Alternância do título da aba ao sair da página (atrai o usuário de volta)
+    const originalPageTitle = document.title;
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        document.title = '📍 Voltar para a página | Gestor de Representantes';
+      } else {
+        document.title = originalPageTitle;
+      }
+    });
+
+    window.addEventListener('blur', () => {
+      document.title = '📍 Voltar para a página | Gestor de Representantes';
+    });
+
+    window.addEventListener('focus', () => {
+      document.title = originalPageTitle;
+    });
+
+    // Alerta de proteção para dados em memória volátil antes de fechar a aba
+    window.addEventListener('beforeunload', (e) => {
+      if (state.itensCadastrados && state.itensCadastrados.length > 0) {
+        e.preventDefault();
+        e.returnValue = 'Os representantes cadastrados estão salvos apenas na memória volátil e serão perdidos ao sair ou atualizar a página. Deseja realmente sair?';
+        return e.returnValue;
+      }
+    });
+
     // Importação em Massa: Baixar Modelo
     document.getElementById('btnBaixarModelo').addEventListener('click', baixarPlanilhaModelo);
 
@@ -369,6 +397,7 @@ const App = (() => {
       infoModelo.textContent = 'Nenhum Estado selecionado';
       MapManager.resetToBrasil();
       renderSelectMarcas(null);
+      atualizarResumoLateral();
       return;
     }
 
@@ -457,6 +486,45 @@ const App = (() => {
     }
 
     renderSelectMarcas(select.value);
+    atualizarResumoLateral();
+  }
+
+  /**
+   * Atualiza as informações do rodapé do card lateral com o resumo territorial
+   */
+  function atualizarResumoLateral() {
+    const cardEstadoAtivo = document.getElementById('cardEstadoAtivo');
+    const cardCidadesAtivas = document.getElementById('cardCidadesAtivas');
+    const cardCidadesDisponiveis = document.getElementById('cardCidadesDisponiveis');
+
+    if (!cardEstadoAtivo) return;
+
+    if (state.estadoSelecionado) {
+      cardEstadoAtivo.textContent = `${state.estadoSelecionado.nome} (${state.estadoSelecionado.sigla})`;
+      const totalDoEstado = state.municipiosAtuais ? state.municipiosAtuais.length : 0;
+      const cadastradasNoEstado = new Set(
+        state.itensCadastrados
+          .filter(it => it.estadoSigla === state.estadoSelecionado.sigla)
+          .map(it => String(it.municipioId))
+      ).size;
+
+      if (cardCidadesAtivas) {
+        cardCidadesAtivas.textContent = `${cadastradasNoEstado} ${cadastradasNoEstado === 1 ? 'cadastrada' : 'cadastradas'}`;
+      }
+      if (cardCidadesDisponiveis) {
+        const livres = Math.max(0, totalDoEstado - cadastradasNoEstado);
+        cardCidadesDisponiveis.textContent = totalDoEstado > 0 ? `${livres} de ${totalDoEstado} disponíveis` : '-';
+      }
+    } else {
+      cardEstadoAtivo.textContent = 'Nenhum selecionado';
+      if (cardCidadesAtivas) {
+        const total = new Set(state.itensCadastrados.map(it => String(it.municipioId))).size;
+        cardCidadesAtivas.textContent = `${total} ${total === 1 ? 'cidade cadastrada' : 'cidades cadastradas'}`;
+      }
+      if (cardCidadesDisponiveis) {
+        cardCidadesDisponiveis.textContent = '-';
+      }
+    }
   }
 
   async function onMunicipioChange(municipioId) {
@@ -577,6 +645,7 @@ const App = (() => {
     atualizarSelectMunicipios();
     renderTabela();
     atualizarMetricas();
+    atualizarResumoLateral();
 
     selectMunicipio.value = '';
     renderSelectMarcas(null);
@@ -628,6 +697,7 @@ const App = (() => {
     }
 
     badgeCount.textContent = `${state.itensCadastrados.length} ${state.itensCadastrados.length === 1 ? 'item' : 'itens'}`;
+    atualizarResumoLateral();
 
     if (itens.length === 0) {
       tbody.innerHTML = `
@@ -732,6 +802,7 @@ const App = (() => {
     atualizarSelectMunicipios();
     renderTabela();
     atualizarMetricas();
+    atualizarResumoLateral();
 
     showToast(`${item.municipioNome} (${item.marcaNome}) removido.`, 'info');
   }
@@ -901,6 +972,7 @@ const App = (() => {
     atualizarSelectMunicipios();
     renderTabela();
     atualizarMetricas();
+    atualizarResumoLateral();
 
     if (state.itensCadastrados.length > 0) {
       MapManager.fitAllRegisteredCities();
