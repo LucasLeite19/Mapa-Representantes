@@ -1,7 +1,53 @@
 /* ==========================================================================
    GESTOR DE REPRESENTANTES - ESTILOS PERSONALIZADOS
-   Paleta Clara, Tranquila e de Alta Legibilidade
+   Paleta Padronizada: Fundo Branco, Textos em Preto e Destaques em Roxo Corporativo
    ========================================================================== */
+
+/* Logo do Header com Fundo Roxo Corporativo Gradiente e Alta Nitidez */
+.header-logo-badge {
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  background: linear-gradient(135deg, #7c3aed 0%, #4c1d95 100%);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.35);
+  color: #ffffff;
+}
+
+/* Botões com Destaque Roxo (Tema Unificado) */
+.btn-purple-primary {
+  background-color: #7c3aed !important;
+  color: #ffffff !important;
+  transition: all 0.15s ease-in-out;
+}
+.btn-purple-primary:hover {
+  background-color: #6d28d9 !important;
+  box-shadow: 0 4px 14px rgba(109, 40, 217, 0.35);
+}
+.btn-purple-primary:active {
+  transform: scale(0.98);
+}
+
+/* Botões de Navegação do Sub-Header */
+.nav-btn-active {
+  background-color: #7c3aed !important;
+  color: #ffffff !important;
+  box-shadow: 0 2px 6px rgba(124, 58, 237, 0.35);
+}
+.nav-btn-inactive {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+  border: 1px solid #d1d5db !important;
+}
+.nav-btn-inactive:hover {
+  background-color: #f5f3ff !important;
+  color: #7c3aed !important;
+  border-color: #c4b5fd !important;
+}
 
 /* Altura fixa e garantida do container do mapa */
 #mapWrapper {
@@ -45,7 +91,7 @@
 
 /* Rótulo Compacto Permanente no Mapa (Apenas Município e Representante) */
 .rep-compact-tooltip {
-  background: rgba(15, 23, 42, 0.9) !important;
+  background: rgba(15, 23, 42, 0.92) !important;
   border: 1px solid rgba(255, 255, 255, 0.45) !important;
   border-radius: 5px !important;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4) !important;
@@ -173,19 +219,20 @@
   display: none !important;
 }
 
-/* Botões de Camadas Ativas e Inativas com visual calmo */
+/* Botões de Camadas Ativas e Inativas com destaque Roxo e Letras Pretas */
 .btn-tile-active {
-  background-color: #0f172a !important;
+  background-color: #7c3aed !important;
   color: #ffffff !important;
-  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 6px rgba(124, 58, 237, 0.3);
 }
 
 .btn-tile-inactive {
-  background-color: #f1f5f9 !important;
-  color: #334155 !important;
+  background-color: #f3f4f6 !important;
+  color: #000000 !important;
 }
 .btn-tile-inactive:hover {
-  background-color: #e2e8f0 !important;
+  background-color: #ede9fe !important;
+  color: #7c3aed !important;
 }
 
 /* Scrollbars limpos */

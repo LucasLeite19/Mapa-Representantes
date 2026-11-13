@@ -548,21 +548,40 @@ const MapManager = (() => {
     return isFullscreen;
   }
 
-  async function captureMapScreenshot() {
+  /**
+   * Captura screenshot em alta resolução (scale: 2) usando dom-to-image.
+   * Se targetBounds for informado, enquadra o estado selecionado, aguarda a estabilização
+   * dos tiles e retorna tanto o Blob (para o zip) quanto a dataUrl com largura e altura (para o PDF).
+   */
+  async function captureMapScreenshot(targetBounds) {
     const mapElement = document.getElementById('map');
     if (!mapElement) throw new Error('Elemento do mapa não encontrado');
 
     const zoomControls = mapElement.querySelectorAll('.leaflet-control-zoom');
     zoomControls.forEach(ctrl => ctrl.style.display = 'none');
 
-    await new Promise(resolve => setTimeout(resolve, 500));
+    // Salvar estado atual do mapa para restaurar depois
+    let prevCenter = null;
+    let prevZoom = null;
+    if (map) {
+      prevCenter = map.getCenter();
+      prevZoom = map.getZoom();
+
+      if (targetBounds && typeof targetBounds.isValid === 'function' && targetBounds.isValid()) {
+        map.fitBounds(targetBounds, { padding: [25, 25], animate: false });
+      }
+    }
+
+    // Aguardar 600ms para renderizar completamente as camadas e polígonos
+    await new Promise(resolve => setTimeout(resolve, 600));
 
     try {
       const scale = 2;
-      const origWidth = mapElement.offsetWidth;
-      const origHeight = mapElement.offsetHeight;
+      const origWidth = mapElement.offsetWidth || 800;
+      const origHeight = mapElement.offsetHeight || 560;
 
-      const blob = await domtoimage.toBlob(mapElement, {
+      // dom-to-image toPng para obter a dataURL (necessária para jsPDF)
+      const dataUrl = await domtoimage.toPng(mapElement, {
         width: origWidth * scale,
         height: origHeight * scale,
         style: {
@@ -580,9 +599,21 @@ const MapManager = (() => {
         }
       });
 
-      return blob;
+      // Converter dataUrl em Blob para o pacote .zip
+      const res = await fetch(dataUrl);
+      const blob = await res.blob();
+
+      return {
+        blob,
+        dataUrl,
+        width: origWidth * scale,
+        height: origHeight * scale
+      };
     } finally {
       zoomControls.forEach(ctrl => ctrl.style.display = '');
+      if (map && prevCenter && prevZoom && targetBounds) {
+        map.setView(prevCenter, prevZoom, { animate: false });
+      }
     }
   }
 

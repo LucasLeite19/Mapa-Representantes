@@ -83,16 +83,14 @@ const App = (() => {
     const navBtnManual = document.getElementById('navBtnManual');
     const navBtnExcel = document.getElementById('navBtnExcel');
     const cardHeaderTitle = document.getElementById('cardHeaderTitle');
-    const cardHeaderBadge = document.getElementById('cardHeaderBadge');
 
-    const activeClasses = 'px-4 py-2 rounded-lg text-xs sm:text-sm font-bold flex items-center gap-2 transition-all bg-slate-900 text-white shadow-xs';
-    const inactiveClasses = 'px-4 py-2 rounded-lg text-xs sm:text-sm font-bold flex items-center gap-2 transition-all bg-white text-gray-800 hover:bg-gray-50 border border-gray-300';
+    const activeClasses = 'px-4 py-2 rounded-lg text-xs sm:text-sm font-bold flex items-center gap-2 transition-all nav-btn-active';
+    const inactiveClasses = 'px-4 py-2 rounded-lg text-xs sm:text-sm font-bold flex items-center gap-2 transition-all nav-btn-inactive';
 
     if (modo === 'manual') {
       if (contentManual) contentManual.classList.remove('hidden');
       if (contentMassa) contentMassa.classList.add('hidden');
       if (cardHeaderTitle) cardHeaderTitle.textContent = 'Cadastro Manual de Representante';
-      if (cardHeaderBadge) cardHeaderBadge.textContent = 'Passo a Passo';
 
       if (navBtnManual) navBtnManual.className = activeClasses;
       if (navBtnExcel) navBtnExcel.className = inactiveClasses;
@@ -100,7 +98,6 @@ const App = (() => {
       if (contentMassa) contentMassa.classList.remove('hidden');
       if (contentManual) contentManual.classList.add('hidden');
       if (cardHeaderTitle) cardHeaderTitle.textContent = 'Importação em Massa via Excel';
-      if (cardHeaderBadge) cardHeaderBadge.textContent = 'Lote de Cidades';
 
       if (navBtnExcel) navBtnExcel.className = activeClasses;
       if (navBtnManual) navBtnManual.className = inactiveClasses;
@@ -149,12 +146,6 @@ const App = (() => {
         document.getElementById('modalAjuda').classList.add('hidden');
       });
     }
-
-    // Abas de navegação internas
-    const tabManual = document.getElementById('tabManual');
-    const tabMassa = document.getElementById('tabMassa');
-    if (tabManual) tabManual.addEventListener('click', () => setAbaAtiva('manual'));
-    if (tabMassa) tabMassa.addEventListener('click', () => setAbaAtiva('massa'));
 
     // Seletor de Estados
     document.getElementById('selectEstado').addEventListener('change', (e) => {
@@ -656,23 +647,23 @@ const App = (() => {
       tr.className = 'hover:bg-gray-50 transition-colors border-b border-gray-100';
 
       tr.innerHTML = `
-        <td class="py-3 px-4 text-center font-bold text-gray-700">
-          <span class="inline-flex items-center justify-center px-2 py-0.5 rounded text-xs font-bold bg-gray-100 text-gray-800 border border-gray-300">
+        <td class="py-3 px-4 text-center font-bold text-black">
+          <span class="inline-flex items-center justify-center px-2 py-0.5 rounded text-xs font-black bg-gray-100 text-black border border-gray-300">
             Nº ${item.seqId}
           </span>
         </td>
         <td class="py-3 px-4 text-center">
           <div class="flex items-center justify-center space-x-1.5">
             <div class="w-6 h-6 rounded-md shadow-sm border border-black border-opacity-20 flex-shrink-0" style="background-color: ${item.cor};"></div>
-            <span class="text-xs font-mono uppercase text-gray-500">${item.cor}</span>
+            <span class="text-xs font-mono uppercase text-black font-bold">${item.cor}</span>
           </div>
         </td>
         <td class="py-3 px-4 text-center">
-          <span class="px-2 py-0.5 rounded text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200">
+          <span class="px-2 py-0.5 rounded text-xs font-black bg-purple-100 text-purple-900 border border-purple-200">
             ${item.estadoSigla}
           </span>
         </td>
-        <td class="py-3 px-4 font-semibold text-gray-800">
+        <td class="py-3 px-4 font-black text-black">
           ${escapeHtml(item.municipioNome)}
         </td>
         <td class="py-3 px-4 text-center">
@@ -680,7 +671,7 @@ const App = (() => {
             ${escapeHtml(item.marcaNome)}
           </span>
         </td>
-        <td class="py-3 px-4 font-medium text-gray-700">
+        <td class="py-3 px-4 font-bold text-black">
           <div class="flex items-center gap-1.5">
             <span class="w-2.5 h-2.5 rounded-full" style="background-color: ${item.cor};"></span>
             <span>${escapeHtml(item.representante)}</span>
@@ -688,10 +679,10 @@ const App = (() => {
         </td>
         <td class="py-3 px-4 text-center">
           <div class="flex items-center justify-center space-x-2">
-            <button data-id="${item.id}" class="btn-focar text-indigo-600 hover:text-indigo-800 p-1.5 hover:bg-indigo-50 rounded-md transition-colors" title="Focar no mapa">
+            <button data-id="${item.id}" class="btn-focar text-purple-700 hover:text-purple-900 p-1.5 hover:bg-purple-100 rounded-md transition-colors" title="Focar no mapa">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
             </button>
-            <button data-id="${item.id}" class="btn-remover text-rose-500 hover:text-rose-700 p-1.5 hover:bg-rose-50 rounded-md transition-colors" title="Remover registro">
+            <button data-id="${item.id}" class="btn-remover text-rose-600 hover:text-rose-800 p-1.5 hover:bg-rose-50 rounded-md transition-colors" title="Remover registro">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
             </button>
           </div>
@@ -1007,7 +998,7 @@ const App = (() => {
       tipo === 'success' ? 'bg-emerald-800 text-emerald-100 border-emerald-700' :
       tipo === 'error' ? 'bg-rose-800 text-rose-100 border-rose-700' :
       tipo === 'warning' ? 'bg-amber-800 text-amber-100 border-amber-700' :
-      'bg-slate-900 text-slate-100 border-slate-700'
+      'bg-gray-900 text-white border-purple-500'
     }`;
 
     const icon = tipo === 'success' ? '✓' : tipo === 'error' ? '✕' : tipo === 'warning' ? '⚠' : 'ℹ';

@@ -229,7 +229,7 @@ const ExcelManager = (() => {
     // ==========================================
     // FOLHA 1: MAPA COLORIDO DO ESTADO
     // ==========================================
-    doc.setFillColor(15, 23, 42); // Slate 900 Corporativo
+    doc.setFillColor(76, 29, 149); // Roxo Corporativo (#4C1D95)
     doc.rect(0, 0, pageWidth, 28, 'F');
 
     // Título Superior
@@ -241,7 +241,7 @@ const ExcelManager = (() => {
     // Subtítulo
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(9.5);
-    doc.setTextColor(203, 213, 225);
+    doc.setTextColor(237, 233, 254);
     doc.text(`Estado: ${estadoNome}  |  Emissão: ${today} às ${now}`, 14, 21);
 
     // Métricas no canto direito
@@ -250,24 +250,34 @@ const ExcelManager = (() => {
     doc.setTextColor(255, 255, 255);
     doc.text(`Municípios Cadastrados: ${totalCidades}   |   Representantes: ${totalReps}`, pageWidth - 14, 16, { align: 'right' });
 
-    // Enquadramento da Imagem do Mapa na Folha 1
+    // Enquadramento Seguro da Imagem do Mapa na Folha 1
     const maxW = 269;
     const maxH = 162;
-    const imgRatio = mapWidth / mapHeight;
+    const safeW = (Number(mapWidth) > 0) ? Number(mapWidth) : 1600;
+    const safeH = (Number(mapHeight) > 0) ? Number(mapHeight) : 1000;
+    const imgRatio = safeW / safeH;
+
     let renderW = maxW;
     let renderH = maxW / imgRatio;
     if (renderH > maxH) {
       renderH = maxH;
       renderW = maxH * imgRatio;
     }
+    if (!isFinite(renderW) || renderW <= 0) renderW = maxW;
+    if (!isFinite(renderH) || renderH <= 0) renderH = maxH;
+
     const posX = (pageWidth - renderW) / 2;
     const posY = 33 + (maxH - renderH) / 2;
 
-    doc.setDrawColor(203, 213, 225);
-    doc.setLineWidth(0.4);
-    doc.rect(posX - 0.5, posY - 0.5, renderW + 1, renderH + 1);
+    if (isFinite(posX) && isFinite(posY) && isFinite(renderW) && isFinite(renderH)) {
+      doc.setDrawColor(221, 214, 254);
+      doc.setLineWidth(0.4);
+      doc.rect(posX - 0.5, posY - 0.5, renderW + 1, renderH + 1);
+    }
 
-    doc.addImage(mapDataUrl, 'PNG', posX, posY, renderW, renderH);
+    if (mapDataUrl && typeof mapDataUrl === 'string' && mapDataUrl.startsWith('data:image/')) {
+      doc.addImage(mapDataUrl, 'PNG', posX, posY, renderW, renderH);
+    }
 
     // Rodapé Folha 1
     doc.setFontSize(8);
@@ -280,7 +290,7 @@ const ExcelManager = (() => {
     doc.addPage('a4', 'landscape');
 
     // Cabeçalho Folha 2
-    doc.setFillColor(15, 23, 42);
+    doc.setFillColor(76, 29, 149);
     doc.rect(0, 0, pageWidth, 28, 'F');
 
     doc.setTextColor(255, 255, 255);
@@ -290,7 +300,7 @@ const ExcelManager = (() => {
 
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(9.5);
-    doc.setTextColor(203, 213, 225);
+    doc.setTextColor(237, 233, 254);
     doc.text(`Relação detalhada dos municípios cadastrados, marcas e representantes  |  Estado: ${estadoNome}`, 14, 21);
 
     // Tabela Executiva
@@ -312,7 +322,7 @@ const ExcelManager = (() => {
       body: tableData,
       theme: 'striped',
       headStyles: {
-        fillColor: [15, 23, 42],
+        fillColor: [109, 40, 217], // Roxo #6D28D9
         textColor: [255, 255, 255],
         fontStyle: 'bold',
         halign: 'center',
@@ -320,7 +330,7 @@ const ExcelManager = (() => {
       },
       bodyStyles: {
         fontSize: 8.5,
-        textColor: [30, 41, 59],
+        textColor: [0, 0, 0],
         valign: 'middle'
       },
       columnStyles: {
@@ -337,12 +347,14 @@ const ExcelManager = (() => {
           if (hex && typeof hex === 'string') {
             const rgb = hexToRgb(hex);
             doc.setFillColor(rgb.r, rgb.g, rgb.b);
-            doc.setDrawColor(30, 41, 59);
+            doc.setDrawColor(76, 29, 149);
             doc.setLineWidth(0.3);
             const size = 5;
             const x = data.cell.x + (data.cell.width - size) / 2;
             const y = data.cell.y + (data.cell.height - size) / 2;
-            doc.roundedRect(x, y, size, size, 1, 1, 'FD');
+            if (isFinite(x) && isFinite(y) && isFinite(size)) {
+              doc.roundedRect(x, y, size, size, 1, 1, 'FD');
+            }
           }
         }
       }

@@ -27,54 +27,35 @@
 </head>
 <body class="bg-gray-50 text-gray-900 min-h-screen flex flex-col font-sans antialiased">
 
-  <!-- Header Superior Limpo, Claro e com Textos em Preto (Alta Legibilidade) -->
+  <!-- Header Superior Limpo: Apenas Logo, Título e Descrição com Textos em Preto -->
   <header class="bg-white border-b border-gray-200 shadow-sm w-full">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex items-center justify-between">
       
-      <!-- Marca e Título (Sem "Corporativo" do lado e com letras pretas) -->
-      <div class="flex items-center space-x-3">
-        <div class="w-10 h-10 rounded-xl bg-slate-900 flex items-center justify-center shadow-sm">
-          <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+      <!-- Marca e Título -->
+      <div class="flex items-center space-x-3.5">
+        <div class="header-logo-badge">
+          <svg style="width: 26px; height: 26px;" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
           </svg>
         </div>
         <div>
           <h1 class="text-xl sm:text-2xl font-black tracking-tight text-black">
             Gestor de Representantes
           </h1>
-          <p class="text-xs text-gray-700 font-medium">Distribuição territorial e malhas geográficas por município</p>
+          <p class="text-xs text-black font-semibold">Distribuição territorial e malhas geográficas por município</p>
         </div>
       </div>
 
-      <!-- Métricas com Letras e Números Pretos & Botão de Exportação -->
-      <div class="flex flex-wrap items-center gap-3">
-        <div class="flex items-center bg-gray-100 rounded-lg px-3.5 py-1.5 border border-gray-300 text-xs shadow-xs">
-          <span class="text-black font-bold mr-1.5">Municípios:</span>
-          <span id="metricTotalCidades" class="font-black text-black text-sm">0</span>
-        </div>
-        <div class="flex items-center bg-gray-100 rounded-lg px-3.5 py-1.5 border border-gray-300 text-xs shadow-xs">
-          <span class="text-black font-bold mr-1.5">Representantes:</span>
-          <span id="metricTotalReps" class="font-black text-black text-sm">0</span>
-        </div>
-        
-        <!-- Botão Baixar Pacote (.zip) com Imagem, Excel e PDF -->
-        <button id="btnBaixarPacote" class="flex items-center space-x-2 bg-slate-900 hover:bg-black text-white font-bold px-4 py-2 rounded-lg shadow-sm transition-all duration-150 transform active:scale-95 text-xs sm:text-sm">
-          <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-          </svg>
-          <span id="btnBaixarPacoteText">Baixar Pacote (.zip)</span>
-        </button>
-      </div>
     </div>
   </header>
 
-  <!-- Sub-Header Único com 4 Botões Centralizados (Sem duplicação de abas) -->
+  <!-- Sub-Header Único com 4 Botões Centralizados (Destaque Roxo Unificado) -->
   <nav class="bg-gray-100 border-b border-gray-200 sticky top-0 z-30">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 flex items-center justify-center">
       <div class="inline-flex flex-wrap items-center justify-center gap-2 sm:gap-3">
         
         <!-- Botão 1: Cadastro Manual -->
-        <button id="navBtnManual" class="px-4 py-2 rounded-lg text-xs sm:text-sm font-bold flex items-center gap-2 transition-all bg-slate-900 text-white shadow-xs">
+        <button id="navBtnManual" class="px-4 py-2 rounded-lg text-xs sm:text-sm font-bold flex items-center gap-2 transition-all nav-btn-active">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
           </svg>
@@ -82,7 +63,7 @@
         </button>
 
         <!-- Botão 2: Importar Excel -->
-        <button id="navBtnExcel" class="px-4 py-2 rounded-lg text-xs sm:text-sm font-bold flex items-center gap-2 transition-all bg-white text-gray-800 hover:bg-gray-50 border border-gray-300">
+        <button id="navBtnExcel" class="px-4 py-2 rounded-lg text-xs sm:text-sm font-bold flex items-center gap-2 transition-all nav-btn-inactive">
           <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
           </svg>
@@ -90,16 +71,16 @@
         </button>
 
         <!-- Botão 3: Sugestão de Divisões (Em Breve) -->
-        <button id="navBtnSugestoes" class="px-4 py-2 rounded-lg text-xs sm:text-sm font-bold flex items-center gap-2 transition-all bg-white text-gray-800 hover:bg-gray-50 border border-gray-300">
-          <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <button id="navBtnSugestoes" class="px-4 py-2 rounded-lg text-xs sm:text-sm font-bold flex items-center gap-2 transition-all nav-btn-inactive">
+          <svg class="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
           </svg>
           <span>Sugestão de Divisões</span>
-          <span class="bg-indigo-100 text-indigo-800 text-[10px] font-bold px-1.5 py-0.5 rounded-full border border-indigo-200">Em Breve</span>
+          <span class="bg-purple-100 text-purple-900 text-[10px] font-bold px-1.5 py-0.5 rounded-full border border-purple-200">Em Breve</span>
         </button>
 
         <!-- Botão 4: Ajuda (Guia de Uso) -->
-        <button id="navBtnAjuda" class="px-4 py-2 rounded-lg text-xs sm:text-sm font-bold flex items-center gap-2 transition-all bg-white text-gray-800 hover:bg-gray-50 border border-gray-300">
+        <button id="navBtnAjuda" class="px-4 py-2 rounded-lg text-xs sm:text-sm font-bold flex items-center gap-2 transition-all nav-btn-inactive">
           <svg class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
@@ -122,17 +103,14 @@
         <!-- Card Operacional Único -->
         <div class="bg-white rounded-xl shadow-xs border border-gray-200 overflow-hidden">
           
-          <!-- Cabeçalho do Card (Muda conforme o botão clicado no topo) -->
-          <div class="px-5 py-3.5 border-b border-gray-200 bg-gray-50 flex items-center justify-between">
-            <div class="flex items-center space-x-2">
-              <span id="cardHeaderIcon" class="w-2.5 h-2.5 rounded-full bg-slate-900"></span>
-              <h2 id="cardHeaderTitle" class="text-sm font-bold text-gray-900">
+          <!-- Cabeçalho do Card (Sem Passo a Passo e Sem Lote de Cidades) -->
+          <div class="px-5 py-3.5 border-b border-gray-200 bg-gray-50 flex items-center">
+            <div class="flex items-center space-x-2.5">
+              <span id="cardHeaderIcon" class="w-2.5 h-2.5 rounded-full bg-purple-600"></span>
+              <h2 id="cardHeaderTitle" class="text-sm font-black text-black">
                 Cadastro Manual de Representante
               </h2>
             </div>
-            <span id="cardHeaderBadge" class="text-[11px] font-semibold text-gray-500">
-              Passo a Passo
-            </span>
           </div>
 
           <div class="p-5">
@@ -141,10 +119,10 @@
               
               <!-- Seleção de Estado -->
               <div>
-                <label for="selectEstado" class="block text-xs font-bold text-gray-800 mb-1">
+                <label for="selectEstado" class="block text-xs font-black text-black mb-1">
                   1. Estado (UF)
                 </label>
-                <select id="selectEstado" class="w-full text-sm bg-white border border-gray-300 rounded-lg px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-slate-900 transition-shadow">
+                <select id="selectEstado" class="w-full text-sm bg-white border border-gray-300 rounded-lg px-3 py-2 text-black font-semibold focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-purple-600 transition-shadow">
                   <option value="">Carregando Estados...</option>
                 </select>
               </div>
@@ -152,16 +130,16 @@
               <!-- Seleção de Município -->
               <div>
                 <div class="flex items-center justify-between mb-1">
-                  <label for="selectMunicipio" class="block text-xs font-bold text-gray-800">
+                  <label for="selectMunicipio" class="block text-xs font-black text-black">
                     2. Município (ou clique no mapa)
                   </label>
-                  <span id="labelTotalMunicipios" class="text-xs text-gray-500 font-medium"></span>
+                  <span id="labelTotalMunicipios" class="text-xs text-black font-bold"></span>
                 </div>
-                <select id="selectMunicipio" disabled class="w-full text-sm bg-gray-100 border border-gray-300 rounded-lg px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-slate-900 transition-shadow disabled:opacity-60 disabled:cursor-not-allowed">
+                <select id="selectMunicipio" disabled class="w-full text-sm bg-gray-100 border border-gray-300 rounded-lg px-3 py-2 text-black font-semibold focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-purple-600 transition-shadow disabled:opacity-60 disabled:cursor-not-allowed">
                   <option value="">Selecione um Estado primeiro</option>
                 </select>
-                <p id="helperMunicipio" class="text-xs text-amber-700 font-medium mt-1.5 hidden flex items-center gap-1">
-                  <svg class="w-3.5 h-3.5 animate-spin text-amber-600" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
+                <p id="helperMunicipio" class="text-xs text-purple-700 font-bold mt-1.5 hidden flex items-center gap-1">
+                  <svg class="w-3.5 h-3.5 animate-spin text-purple-600" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
                   <span>Buscando contorno da cidade no IBGE...</span>
                 </p>
               </div>
@@ -169,39 +147,39 @@
               <!-- Seleção de Marca (Até 6 Marcas) -->
               <div>
                 <div class="flex items-center justify-between mb-1">
-                  <label for="selectMarca" class="block text-xs font-bold text-gray-800">
+                  <label for="selectMarca" class="block text-xs font-black text-black">
                     3. Marca Representada (até 6 por cidade)
                   </label>
-                  <button id="btnGerenciarMarcas" type="button" class="text-[11px] text-indigo-700 hover:text-indigo-900 font-bold flex items-center gap-0.5">
+                  <button id="btnGerenciarMarcas" type="button" class="text-[11px] text-purple-700 hover:text-purple-900 font-black flex items-center gap-0.5">
                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
                     <span>Renomear</span>
                   </button>
                 </div>
-                <select id="selectMarca" class="w-full text-sm bg-white border border-gray-300 rounded-lg px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-slate-900 transition-shadow">
+                <select id="selectMarca" class="w-full text-sm bg-white border border-gray-300 rounded-lg px-3 py-2 text-black font-semibold focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-purple-600 transition-shadow">
                   <!-- Inserido dinamicamente via JS -->
                 </select>
               </div>
 
               <!-- Nome do Representante -->
               <div>
-                <label for="inputRepresentante" class="block text-xs font-bold text-gray-800 mb-1">
+                <label for="inputRepresentante" class="block text-xs font-black text-black mb-1">
                   4. Nome do Representante
                 </label>
-                <input id="inputRepresentante" type="text" placeholder="Ex: Lucas Ferreira" class="w-full text-sm bg-white border border-gray-300 rounded-lg px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-slate-900 transition-shadow" />
-                <p class="text-xs text-gray-500 mt-1">Ao digitar um representante cadastrado, a cor dele é carregada automaticamente.</p>
+                <input id="inputRepresentante" type="text" placeholder="Ex: Lucas Ferreira" class="w-full text-sm bg-white border border-gray-300 rounded-lg px-3 py-2 text-black font-semibold focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-purple-600 transition-shadow" />
+                <p class="text-xs text-gray-700 font-medium mt-1">Ao digitar um representante cadastrado, a cor dele é carregada automaticamente.</p>
               </div>
 
               <!-- Cor do Representante -->
               <div>
-                <label class="block text-xs font-bold text-gray-800 mb-1">
+                <label class="block text-xs font-black text-black mb-1">
                   5. Cor de Destaque no Mapa
                 </label>
                 <div class="flex items-center space-x-3">
                   <div class="relative flex items-center">
-                    <input id="inputCor" type="color" value="#2563eb" class="w-11 h-10 rounded-lg border border-gray-300 cursor-pointer p-0.5 bg-white shadow-xs" />
+                    <input id="inputCor" type="color" value="#7c3aed" class="w-11 h-10 rounded-lg border border-gray-300 cursor-pointer p-0.5 bg-white shadow-xs" />
                   </div>
-                  <input id="inputCorHex" type="text" value="#2563EB" maxlength="7" class="w-28 text-xs font-mono uppercase bg-white border border-gray-300 rounded-lg px-2.5 py-2 text-center text-gray-900 font-bold focus:outline-none focus:ring-2 focus:ring-slate-900" />
-                  <button id="btnCorAleatoria" type="button" title="Gerar cor aleatória" class="p-2 text-gray-600 hover:text-black hover:bg-gray-100 border border-gray-300 rounded-lg transition-colors">
+                  <input id="inputCorHex" type="text" value="#7C3AED" maxlength="7" class="w-28 text-xs font-mono uppercase bg-white border border-gray-300 rounded-lg px-2.5 py-2 text-center text-black font-black focus:outline-none focus:ring-2 focus:ring-purple-600" />
+                  <button id="btnCorAleatoria" type="button" title="Gerar cor aleatória" class="p-2 text-black hover:text-purple-700 hover:bg-purple-50 border border-gray-300 rounded-lg transition-colors">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                     </svg>
@@ -211,8 +189,8 @@
 
               <!-- Botão Salvar -->
               <div class="pt-2">
-                <button id="btnSalvarRepresentante" class="w-full bg-slate-900 hover:bg-black text-white font-bold py-2.5 px-4 rounded-lg shadow-sm transition-all flex items-center justify-center gap-2 text-sm">
-                  <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <button id="btnSalvarRepresentante" class="w-full btn-purple-primary font-bold py-2.5 px-4 rounded-lg shadow-sm flex items-center justify-center gap-2 text-sm">
+                  <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                   </svg>
                   <span id="btnSalvarText">Salvar Representante</span>
@@ -223,12 +201,12 @@
 
             <!-- Painel 2: Importação em Massa (Ativado pelo botão no topo) -->
             <div id="contentMassa" class="space-y-4 hidden">
-              <div class="bg-gray-100 rounded-lg p-3 text-xs text-gray-800 border border-gray-200 space-y-1">
+              <div class="bg-gray-100 rounded-lg p-3 text-xs text-black border border-gray-200 space-y-1">
                 <p class="font-bold flex items-center gap-1.5 text-black">
-                  <svg class="w-4 h-4 text-slate-800" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                  <svg class="w-4 h-4 text-purple-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                   Importação de Marcas em Lote:
                 </p>
-                <ol class="list-decimal list-inside space-y-1 text-gray-700">
+                <ol class="list-decimal list-inside space-y-1 text-black font-medium">
                   <li>Selecione o Estado desejado.</li>
                   <li>Baixe a planilha modelo (.xlsx) contendo as colunas de Município e Marca.</li>
                   <li>Preencha as linhas (até 6 marcas por cidade) e suba a planilha abaixo.</li>
@@ -237,46 +215,35 @@
 
               <!-- Botão Baixar Modelo -->
               <div>
-                <button id="btnBaixarModelo" class="w-full bg-white hover:bg-gray-50 text-gray-800 font-bold py-2.5 px-4 rounded-lg border border-gray-300 shadow-xs transition-all flex items-center justify-center gap-2 text-sm">
+                <button id="btnBaixarModelo" class="w-full bg-white hover:bg-gray-50 text-black font-bold py-2.5 px-4 rounded-lg border border-gray-300 shadow-xs transition-all flex items-center justify-center gap-2 text-sm">
                   <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                   </svg>
                   <span>Baixar Planilha Modelo (.xlsx)</span>
                 </button>
-                <p id="infoModeloEstado" class="text-xs text-gray-500 mt-1 text-center font-medium">Nenhum Estado selecionado</p>
+                <p id="infoModeloEstado" class="text-xs text-black mt-1 text-center font-bold">Nenhum Estado selecionado</p>
               </div>
 
               <!-- Input File Oculto e Área de Upload -->
               <input id="inputFilePlanilha" type="file" accept=".xlsx, .xls" class="hidden" />
 
-              <div id="dropZonePlanilha" class="border-2 border-dashed border-gray-300 hover:border-slate-800 rounded-xl p-6 text-center cursor-pointer transition-colors bg-white hover:bg-gray-50">
+              <div id="dropZonePlanilha" class="border-2 border-dashed border-gray-300 hover:border-purple-600 rounded-xl p-6 text-center cursor-pointer transition-colors bg-white hover:bg-purple-50">
                 <div class="flex flex-col items-center justify-center space-y-2">
-                  <div class="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center text-slate-800">
+                  <div class="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center text-purple-700">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                     </svg>
                   </div>
                   <div>
-                    <span class="text-sm font-bold text-slate-900 hover:underline">Clique para selecionar</span>
-                    <span class="text-sm text-gray-600"> ou arraste a planilha</span>
+                    <span class="text-sm font-bold text-black hover:underline">Clique para selecionar</span>
+                    <span class="text-sm text-black"> ou arraste a planilha</span>
                   </div>
-                  <p class="text-xs text-gray-500">Suporta arquivos Excel (.xlsx, .xls)</p>
+                  <p class="text-xs text-gray-700 font-medium">Suporta arquivos Excel (.xlsx, .xls)</p>
                 </div>
               </div>
 
             </div>
           </div>
-        </div>
-
-        <!-- Card de Dicas Rápidas -->
-        <div class="bg-white rounded-xl p-4 shadow-xs border border-gray-200 text-xs text-gray-600 space-y-2">
-          <h3 class="font-bold text-gray-900 flex items-center gap-1.5">
-            <svg class="w-4 h-4 text-amber-500" fill="currentColor" viewBox="0 0 20 20"><path d="M11 3a1 1 0 10-2 0v1a1 1 0 102 0V3zM15.657 5.757a1 1 0 00-1.414-1.414l-.707.707a1 1 0 001.414 1.414l.707-.707zM18 10a1 1 0 01-1 1h-1a1 1 0 110-2h1a1 1 0 011 1zM5.05 6.464A1 1 0 106.464 5.05l-.707-.707a1 1 0 00-1.414 1.414l.707.707zM5 10a1 1 0 01-1 1H3a1 1 0 110-2h1a1 1 0 011 1zM8 16v-1h4v1a2 2 0 11-4 0zM12 14H8a4 4 0 01-.82-7.916 4 4 0 017.64 0A4 4 0 0112 14z" /></svg>
-            Operação no Mapa
-          </h3>
-          <p>• O rótulo inicial no mapa exibe <strong>apenas Município e Representante</strong> para evitar sobreposição.</p>
-          <p>• Passe o mouse ou clique no município para abrir o <strong>card detalhado</strong> com marcas e números.</p>
-          <p>• O botão <strong>Baixar Pacote</strong> sempre enquadra o Estado inteiro e gera a foto PNG, o Excel e o <strong>PDF em 2 Folhas</strong>.</p>
         </div>
 
       </div>
@@ -309,13 +276,13 @@
             <span class="text-gray-600 font-bold px-2 py-1">Ajustes:</span>
             
             <!-- Checkbox de Divisões Municipais -->
-            <label class="flex items-center space-x-1.5 cursor-pointer font-bold text-gray-800 bg-gray-100 hover:bg-gray-200 px-2.5 py-1 rounded-lg transition-colors">
-              <input id="checkDivisoesCidades" type="checkbox" checked class="h-3.5 w-3.5 text-slate-900 rounded border-gray-300 focus:ring-slate-900" />
+            <label class="flex items-center space-x-1.5 cursor-pointer font-bold text-black bg-gray-100 hover:bg-gray-200 px-2.5 py-1 rounded-lg transition-colors">
+              <input id="checkDivisoesCidades" type="checkbox" checked class="h-3.5 w-3.5 text-purple-600 rounded border-gray-300 focus:ring-purple-600" />
               <span>Divisões Municipais</span>
             </label>
 
             <!-- Botão Enquadrar Estado -->
-            <button id="btnResetZoom" title="Reenquadrar visão do Estado" class="px-2.5 py-1 text-gray-800 font-bold hover:bg-gray-100 rounded-lg transition-colors flex items-center gap-1 border border-gray-200">
+            <button id="btnResetZoom" title="Reenquadrar visão do Estado" class="px-2.5 py-1 text-black font-bold hover:bg-gray-100 rounded-lg transition-colors flex items-center gap-1 border border-gray-200">
               <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
               </svg>
@@ -323,7 +290,7 @@
             </button>
 
             <!-- Botão Tela Cheia -->
-            <button id="btnFullScreen" title="Alternar Tela Cheia" class="px-2.5 py-1 text-gray-800 font-bold hover:bg-gray-100 rounded-lg transition-colors flex items-center gap-1 border border-gray-200">
+            <button id="btnFullScreen" title="Alternar Tela Cheia" class="px-2.5 py-1 text-black font-bold hover:bg-gray-100 rounded-lg transition-colors flex items-center gap-1 border border-gray-200">
               <svg id="iconExpand" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
               </svg>
@@ -341,9 +308,9 @@
           <div id="map"></div>
 
           <!-- Legenda Discreta no Canto Inferior Esquerdo -->
-          <div class="no-export absolute bottom-3 left-3 z-20 bg-slate-900 bg-opacity-90 text-white text-[11px] px-3 py-1.5 rounded-lg backdrop-filter blur-sm border border-slate-700 pointer-events-none flex flex-wrap items-center gap-2.5">
+          <div class="no-export absolute bottom-3 left-3 z-20 bg-gray-900 bg-opacity-90 text-white text-[11px] px-3 py-1.5 rounded-lg backdrop-filter blur-sm border border-gray-700 pointer-events-none flex flex-wrap items-center gap-2.5">
             <div class="flex items-center gap-1">
-              <span class="w-2.5 h-2.5 rounded-full bg-indigo-500 border border-indigo-300 inline-block"></span>
+              <span class="w-2.5 h-2.5 rounded-full bg-purple-500 border border-purple-300 inline-block"></span>
               <span>Borda Estado</span>
             </div>
             <div class="flex items-center gap-1">
@@ -355,6 +322,33 @@
               <span>Edição</span>
             </div>
           </div>
+        </div>
+
+        <!-- Barra de Status e Ações abaixo do Mapa: Métricas e Baixar Pacote -->
+        <div class="bg-white rounded-xl p-3.5 sm:p-4 border border-gray-200 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-3">
+          
+          <!-- Métricas com Letras e Números Pretos -->
+          <div class="flex flex-wrap items-center gap-2.5 w-full sm:w-auto">
+            <div class="flex items-center bg-gray-50 rounded-lg px-3.5 py-2 border border-gray-300 text-xs shadow-xs">
+              <span class="w-2.5 h-2.5 rounded-full bg-purple-600 mr-2 inline-block"></span>
+              <span class="text-black font-bold mr-1.5">Municípios:</span>
+              <span id="metricTotalCidades" class="font-black text-black text-sm">0</span>
+            </div>
+            <div class="flex items-center bg-gray-50 rounded-lg px-3.5 py-2 border border-gray-300 text-xs shadow-xs">
+              <span class="w-2.5 h-2.5 rounded-full bg-purple-600 mr-2 inline-block"></span>
+              <span class="text-black font-bold mr-1.5">Representantes:</span>
+              <span id="metricTotalReps" class="font-black text-black text-sm">0</span>
+            </div>
+          </div>
+
+          <!-- Botão Baixar Pacote (.zip) com Destaque Roxo e Ícone Branco -->
+          <button id="btnBaixarPacote" class="w-full sm:w-auto flex items-center justify-center space-x-2 btn-purple-primary font-bold px-5 py-2.5 rounded-lg shadow-sm transition-all duration-150 transform active:scale-95 text-xs sm:text-sm">
+            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
+            <span id="btnBaixarPacoteText">Baixar Pacote (.zip)</span>
+          </button>
+
         </div>
 
       </div>
@@ -369,14 +363,14 @@
         <div>
           <h2 class="text-base sm:text-lg font-black text-black flex items-center gap-2">
             <span>Municípios e Representantes</span>
-            <span id="badgeTableCount" class="bg-gray-200 text-black text-xs px-2 py-0.5 rounded-full font-bold">0 itens</span>
+            <span id="badgeTableCount" class="bg-purple-100 text-purple-900 border border-purple-200 text-xs px-2.5 py-0.5 rounded-full font-black">0 itens</span>
           </h2>
-          <p class="text-xs text-gray-600 font-medium">Listagem completa em memória volátil</p>
+          <p class="text-xs text-black font-semibold">Listagem completa em memória volátil</p>
         </div>
 
         <!-- Filtro Rápido -->
         <div class="relative w-full sm:w-72">
-          <input id="inputBuscaTabela" type="text" placeholder="Filtrar por cidade, marca ou nome..." class="w-full text-xs bg-white border border-gray-300 rounded-lg pl-8 pr-3 py-2 text-gray-900 font-medium focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-slate-900" />
+          <input id="inputBuscaTabela" type="text" placeholder="Filtrar por cidade, marca ou nome..." class="w-full text-xs bg-white border border-gray-300 rounded-lg pl-8 pr-3 py-2 text-black font-semibold focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-purple-600" />
           <svg class="w-4 h-4 text-gray-500 absolute left-2.5 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
@@ -386,7 +380,7 @@
       <!-- Tabela Responsiva com Coluna Marca -->
       <div class="overflow-x-auto">
         <table class="min-w-full divide-y divide-gray-200 text-xs sm:text-sm">
-          <thead class="bg-gray-100 text-gray-700 font-bold uppercase tracking-wider text-xs">
+          <thead class="bg-gray-100 text-black font-black uppercase tracking-wider text-xs">
             <tr>
               <th scope="col" class="py-3 px-4 text-center w-16">Nº</th>
               <th scope="col" class="py-3 px-4 text-center w-20">Cor</th>
@@ -412,7 +406,7 @@
     <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-gray-200 space-y-4">
       <div class="flex items-center justify-between border-b border-gray-100 pb-3">
         <h3 class="text-base font-bold text-gray-900 flex items-center gap-2">
-          <span class="w-2.5 h-2.5 rounded-full bg-slate-900"></span>
+          <span class="w-2.5 h-2.5 rounded-full bg-purple-600"></span>
           Personalizar Nomes das 6 Marcas
         </h3>
         <button id="btnFecharModalMarcas" class="text-gray-400 hover:text-gray-600 text-xl font-bold">&times;</button>
@@ -423,32 +417,32 @@
       <div class="space-y-3">
         <div class="flex items-center gap-2">
           <span class="rep-brand-badge brand-1 w-16 text-center">Marca 1</span>
-          <input id="inputNomeMarca1" type="text" class="flex-1 text-xs border border-gray-300 rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-slate-900 focus:outline-none font-bold text-gray-900" />
+          <input id="inputNomeMarca1" type="text" class="flex-1 text-xs border border-gray-300 rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-purple-600 focus:outline-none font-bold text-black" />
         </div>
         <div class="flex items-center gap-2">
           <span class="rep-brand-badge brand-2 w-16 text-center">Marca 2</span>
-          <input id="inputNomeMarca2" type="text" class="flex-1 text-xs border border-gray-300 rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-slate-900 focus:outline-none font-bold text-gray-900" />
+          <input id="inputNomeMarca2" type="text" class="flex-1 text-xs border border-gray-300 rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-purple-600 focus:outline-none font-bold text-black" />
         </div>
         <div class="flex items-center gap-2">
           <span class="rep-brand-badge brand-3 w-16 text-center">Marca 3</span>
-          <input id="inputNomeMarca3" type="text" class="flex-1 text-xs border border-gray-300 rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-slate-900 focus:outline-none font-bold text-gray-900" />
+          <input id="inputNomeMarca3" type="text" class="flex-1 text-xs border border-gray-300 rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-purple-600 focus:outline-none font-bold text-black" />
         </div>
         <div class="flex items-center gap-2">
           <span class="rep-brand-badge brand-4 w-16 text-center">Marca 4</span>
-          <input id="inputNomeMarca4" type="text" class="flex-1 text-xs border border-gray-300 rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-slate-900 focus:outline-none font-bold text-gray-900" />
+          <input id="inputNomeMarca4" type="text" class="flex-1 text-xs border border-gray-300 rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-purple-600 focus:outline-none font-bold text-black" />
         </div>
         <div class="flex items-center gap-2">
           <span class="rep-brand-badge brand-5 w-16 text-center">Marca 5</span>
-          <input id="inputNomeMarca5" type="text" class="flex-1 text-xs border border-gray-300 rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-slate-900 focus:outline-none font-bold text-gray-900" />
+          <input id="inputNomeMarca5" type="text" class="flex-1 text-xs border border-gray-300 rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-purple-600 focus:outline-none font-bold text-black" />
         </div>
         <div class="flex items-center gap-2">
           <span class="rep-brand-badge brand-6 w-16 text-center">Marca 6</span>
-          <input id="inputNomeMarca6" type="text" class="flex-1 text-xs border border-gray-300 rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-slate-900 focus:outline-none font-bold text-gray-900" />
+          <input id="inputNomeMarca6" type="text" class="flex-1 text-xs border border-gray-300 rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-purple-600 focus:outline-none font-bold text-black" />
         </div>
       </div>
 
       <div class="pt-2 flex justify-end gap-2">
-        <button id="btnSalvarNomesMarcas" class="bg-slate-900 hover:bg-black text-white font-bold px-4 py-2 rounded-lg text-xs transition-colors">
+        <button id="btnSalvarNomesMarcas" class="btn-purple-primary font-bold px-4 py-2 rounded-lg text-xs transition-colors">
           Salvar Nomes
         </button>
       </div>
@@ -460,12 +454,12 @@
     <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-gray-200 space-y-4">
       <div class="flex items-center justify-between border-b border-gray-100 pb-3">
         <div class="flex items-center gap-2.5">
-          <div class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-700 flex items-center justify-center">
+          <div class="w-8 h-8 rounded-lg bg-purple-50 text-purple-700 flex items-center justify-center">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" /></svg>
           </div>
           <div>
             <h3 class="text-base font-bold text-gray-900">Sugestão de Divisões Territoriais</h3>
-            <span class="text-[10px] font-bold text-indigo-800 bg-indigo-100 px-2 py-0.5 rounded-full border border-indigo-200">Em Desenvolvimento</span>
+            <span class="text-[10px] font-bold text-purple-800 bg-purple-100 px-2 py-0.5 rounded-full border border-purple-200">Em Desenvolvimento</span>
           </div>
         </div>
         <button id="btnFecharModalSugestoes" class="text-gray-400 hover:text-gray-600 text-2xl font-bold leading-none">&times;</button>
@@ -477,18 +471,18 @@
         </p>
         <div class="bg-gray-50 p-3.5 rounded-xl border border-gray-200 space-y-2">
           <div class="flex items-start gap-2">
-            <span class="text-indigo-600 font-bold">•</span>
+            <span class="text-purple-600 font-bold">•</span>
             <span><strong>Agrupamento por Proximidade:</strong> Divisão em carteiras de municípios vizinhos para otimizar tempo de deslocamento.</span>
           </div>
           <div class="flex items-start gap-2">
-            <span class="text-indigo-600 font-bold">•</span>
+            <span class="text-purple-600 font-bold">•</span>
             <span><strong>Balanceamento Populacional:</strong> Distribuição equilibrada de cidades por potencial populacional.</span>
           </div>
         </div>
       </div>
 
       <div class="pt-2 flex justify-end">
-        <button onclick="document.getElementById('modalSugestoes').classList.add('hidden')" class="bg-slate-900 hover:bg-black text-white font-bold px-4 py-2 rounded-lg text-xs transition-colors">
+        <button onclick="document.getElementById('modalSugestoes').classList.add('hidden')" class="btn-purple-primary font-bold px-4 py-2 rounded-lg text-xs transition-colors">
           Fechar
         </button>
       </div>
@@ -500,7 +494,7 @@
     <div class="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-2xl border border-gray-200 space-y-4 max-h-[90vh] overflow-y-auto">
       <div class="flex items-center justify-between border-b border-gray-100 pb-3">
         <div class="flex items-center gap-2.5">
-          <div class="w-8 h-8 rounded-lg bg-amber-100 text-amber-800 flex items-center justify-center">
+          <div class="w-8 h-8 rounded-lg bg-purple-100 text-purple-800 flex items-center justify-center">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
           </div>
           <div>
@@ -515,7 +509,7 @@
         
         <div class="bg-gray-50 p-3.5 rounded-xl border border-gray-200 space-y-1">
           <h4 class="font-bold text-gray-900 flex items-center gap-1.5 text-sm">
-            <span class="w-5 h-5 rounded-full bg-slate-900 text-white flex items-center justify-center text-xs">1</span>
+            <span class="w-5 h-5 rounded-full bg-purple-700 text-white flex items-center justify-center text-xs font-bold">1</span>
             Seleção do Estado e Divisões Municipais
           </h4>
           <p>Selecione um Estado no menu. O mapa enquadra a região e traça as <strong>fronteiras do Estado</strong> e todas as <strong>divisões de cidades</strong> em cores de alto contraste.</p>
@@ -523,7 +517,7 @@
 
         <div class="bg-gray-50 p-3.5 rounded-xl border border-gray-200 space-y-1">
           <h4 class="font-bold text-gray-900 flex items-center gap-1.5 text-sm">
-            <span class="w-5 h-5 rounded-full bg-slate-900 text-white flex items-center justify-center text-xs">2</span>
+            <span class="w-5 h-5 rounded-full bg-purple-700 text-white flex items-center justify-center text-xs font-bold">2</span>
             Cadastro com 1 Clique Direto no Mapa
           </h4>
           <p>Você pode selecionar cidades pelo formulário ou <strong>clicando diretamente sobre a cidade no mapa</strong>.</p>
@@ -531,7 +525,7 @@
 
         <div class="bg-gray-50 p-3.5 rounded-xl border border-gray-200 space-y-1">
           <h4 class="font-bold text-gray-900 flex items-center gap-1.5 text-sm">
-            <span class="w-5 h-5 rounded-full bg-slate-900 text-white flex items-center justify-center text-xs">3</span>
+            <span class="w-5 h-5 rounded-full bg-purple-700 text-white flex items-center justify-center text-xs font-bold">3</span>
             Múltiplas Marcas por Município
           </h4>
           <p>Cada município aceita até 6 marcas. Cidades com mais de uma marca exibem <strong>listras diagonais</strong> com as cores correspondentes no mapa.</p>
@@ -539,7 +533,7 @@
 
         <div class="bg-gray-50 p-3.5 rounded-xl border border-gray-200 space-y-1">
           <h4 class="font-bold text-gray-900 flex items-center gap-1.5 text-sm">
-            <span class="w-5 h-5 rounded-full bg-slate-900 text-white flex items-center justify-center text-xs">4</span>
+            <span class="w-5 h-5 rounded-full bg-purple-700 text-white flex items-center justify-center text-xs font-bold">4</span>
             Exportação do Pacote (.zip)
           </h4>
           <p>O botão <strong>Baixar Pacote (.zip)</strong> sempre fotografa o Estado inteiro perfeitamente enquadrado e gera:</p>
@@ -553,7 +547,7 @@
       </div>
 
       <div class="pt-2 flex justify-end">
-        <button onclick="document.getElementById('modalAjuda').classList.add('hidden')" class="bg-slate-900 hover:bg-black text-white font-bold px-4 py-2 rounded-lg text-xs transition-colors">
+        <button onclick="document.getElementById('modalAjuda').classList.add('hidden')" class="btn-purple-primary font-bold px-4 py-2 rounded-lg text-xs transition-colors">
           Fechar Guia
         </button>
       </div>
@@ -561,7 +555,7 @@
   </div>
 
   <!-- Footer -->
-  <footer class="bg-white border-t border-gray-200 py-4 text-center text-xs text-gray-600 font-medium">
+  <footer class="bg-white border-t border-gray-200 py-4 text-center text-xs text-black font-semibold">
     <p>Gestor Territorial de Representantes &bull; Dados geográficos providos pelo IBGE &bull; Memória volátil (100% em memória)</p>
   </footer>
 
@@ -569,7 +563,7 @@
   <div id="modalProgresso" class="fixed inset-0 bg-gray-900 bg-opacity-60 backdrop-filter blur-xs z-50 flex items-center justify-center p-4 hidden">
     <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-gray-200 space-y-4">
       <div class="flex items-center space-x-3">
-        <div class="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-900">
+        <div class="w-10 h-10 rounded-xl bg-purple-100 flex items-center justify-center text-purple-700">
           <svg class="w-6 h-6 animate-spin" fill="none" viewBox="0 0 24 24">
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
@@ -587,7 +581,7 @@
           <span id="modalProgressoPorcentagem">0%</span>
         </div>
         <div class="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
-          <div id="modalProgressoBarra" class="bg-slate-900 h-3 rounded-full transition-all duration-300" style="width: 0%"></div>
+          <div id="modalProgressoBarra" class="bg-purple-700 h-3 rounded-full transition-all duration-300" style="width: 0%"></div>
         </div>
       </div>
 
