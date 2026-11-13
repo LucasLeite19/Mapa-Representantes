@@ -40,7 +40,7 @@
               Brasil
             </span>
           </h1>
-          <p class="text-xs text-gray-400">Distribuição territorial e malhas geográficas por município (Suporte a até 6 Marcas)</p>
+          <p class="text-xs text-gray-400">Distribuição territorial e malhas geográficas detalhadas (Suporte a até 6 Marcas)</p>
         </div>
       </div>
 
@@ -114,7 +114,7 @@
               <div>
                 <div class="flex items-center justify-between mb-1">
                   <label for="selectMunicipio" class="block text-xs font-semibold text-gray-700">
-                    2. Município
+                    2. Município (ou clique no mapa)
                   </label>
                   <span id="labelTotalMunicipios" class="text-xs text-gray-500"></span>
                 </div>
@@ -236,11 +236,11 @@
         <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-200 text-xs text-gray-600 space-y-2">
           <h3 class="font-bold text-gray-800 flex items-center gap-1.5">
             <svg class="w-4 h-4 text-amber-500" fill="currentColor" viewBox="0 0 20 20"><path d="M11 3a1 1 0 10-2 0v1a1 1 0 102 0V3zM15.657 5.757a1 1 0 00-1.414-1.414l-.707.707a1 1 0 001.414 1.414l.707-.707zM18 10a1 1 0 01-1 1h-1a1 1 0 110-2h1a1 1 0 011 1zM5.05 6.464A1 1 0 106.464 5.05l-.707-.707a1 1 0 00-1.414 1.414l.707.707zM5 10a1 1 0 01-1 1H3a1 1 0 110-2h1a1 1 0 011 1zM8 16v-1h4v1a2 2 0 11-4 0zM12 14H8a4 4 0 01-.82-7.916 4 4 0 017.64 0A4 4 0 0112 14z" /></svg>
-            Múltiplas Marcas no Mapa
+            Navegação Interativa no Mapa
           </h3>
-          <p>• Um município aceita até <strong>6 marcas distintas</strong>.</p>
-          <p>• Cidades com mais de uma marca são exibidas no mapa com um <strong>padrão listrado</strong> composto pelas cores de cada representante!</p>
-          <p>• O rótulo central permanente detalha todos os representantes e marcas atuantes no município.</p>
+          <p>• Ao selecionar o Estado, a fronteira é <strong>destacada</strong> e todas as <strong>divisões municipais</strong> são exibidas.</p>
+          <p>• <strong>Clique direto na cidade:</strong> você pode clicar em qualquer município no mapa para selecioná-lo de imediato.</p>
+          <p>• Cidades com mais de uma marca são exibidas com <strong>listras das cores correspondentes</strong>.</p>
         </div>
 
       </div>
@@ -268,8 +268,15 @@
             </button>
           </div>
 
-          <!-- Botões de Ação do Mapa -->
-          <div class="flex items-center space-x-2">
+          <!-- Botões de Ação do Mapa e Checkbox de Divisões -->
+          <div class="flex items-center space-x-2.5">
+            <!-- Checkbox de Divisões Municipais -->
+            <label class="flex items-center space-x-1.5 cursor-pointer text-xs font-semibold text-gray-700 bg-gray-50 px-2.5 py-1.5 rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors">
+              <input id="checkDivisoesCidades" type="checkbox" checked class="h-3.5 w-3.5 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500" />
+              <span class="hidden sm:inline">Divisões Municipais</span>
+              <span class="sm:hidden">Cidades</span>
+            </label>
+
             <!-- Botão Enquadrar -->
             <button id="btnResetZoom" title="Reenquadrar visão" class="p-2 text-gray-600 hover:text-indigo-600 hover:bg-gray-100 rounded-lg border border-gray-200 transition-colors text-xs flex items-center gap-1 font-medium">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -297,9 +304,19 @@
           <div id="map"></div>
 
           <!-- Legenda Discreta no Canto Inferior Esquerdo -->
-          <div class="no-export absolute bottom-3 left-3 z-20 bg-gray-900 bg-opacity-80 text-white text-xs px-3 py-1.5 rounded-lg backdrop-filter blur-sm border border-gray-700 pointer-events-none flex items-center gap-2">
-            <span class="w-2.5 h-2.5 rounded-full bg-amber-400 border border-amber-200 inline-block"></span>
-            <span>Contorno pontilhado: Município em seleção</span>
+          <div class="no-export absolute bottom-3 left-3 z-20 bg-gray-900 bg-opacity-85 text-white text-[11px] px-3 py-1.5 rounded-lg backdrop-filter blur-sm border border-gray-700 pointer-events-none flex flex-wrap items-center gap-2.5">
+            <div class="flex items-center gap-1">
+              <span class="w-2.5 h-2.5 rounded-full bg-indigo-500 border border-indigo-300 inline-block"></span>
+              <span>Borda Estado</span>
+            </div>
+            <div class="flex items-center gap-1">
+              <span class="w-2.5 h-2.5 rounded-sm bg-white bg-opacity-30 border border-white inline-block"></span>
+              <span>Divisões (Clique na cidade)</span>
+            </div>
+            <div class="flex items-center gap-1">
+              <span class="w-2.5 h-2.5 rounded-full bg-amber-400 border border-amber-200 inline-block"></span>
+              <span>Edição</span>
+            </div>
           </div>
         </div>
 

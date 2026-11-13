@@ -1,8 +1,8 @@
 /**
  * MÓDULO: MAP MANAGER
  * Responsável pelo Leaflet, camadas de fundo (tiles),
- * renderização de malhas com suporte a múltiplas marcas (até 6 marcas por município),
- * padrões visuais listrados (SVG stripes), rótulos centrais permanentes e exportação.
+ * destaque de Estado, divisão detalhada de municípios com interatividade (hover e clique),
+ * renderização de malhas com suporte a múltiplas marcas (SVG stripes), rótulos centrais permanentes e exportação.
  */
 
 const MapManager = (() => {
@@ -11,7 +11,12 @@ const MapManager = (() => {
   let previewLayer = null;
   let isFullscreen = false;
 
-  // Mapa de camadas ativas agrupadas por município: municipioId -> { layer, geoJson, items }
+  // Camadas de destaque de Estado e divisões municipais
+  let stateBoundaryLayer = null;
+  let municipalDivisionsLayer = null;
+  let showDivisions = true;
+
+  // Mapa de camadas ativas de cidades cadastradas: municipioId -> { layer, geoJson, items }
   const cityLayersMap = new Map();
 
   const BRASIL_CENTER = [-14.235, -51.9253];
@@ -57,7 +62,7 @@ const MapManager = (() => {
   };
 
   /**
-   * Inicializa o Leaflet (usando SVG renderer para permitir padrões de listras em cidades multi-marca)
+   * Inicializa o Leaflet (SVG renderer para padrões dinâmicos)
    */
   function init() {
     const mapEl = document.getElementById('map');
@@ -65,7 +70,7 @@ const MapManager = (() => {
 
     map = L.map('map', {
       zoomControl: true,
-      preferCanvas: false // Permite SVG patterns dinâmicos para municípios com múltiplas marcas
+      preferCanvas: false
     }).setView(BRASIL_CENTER, BRASIL_ZOOM);
 
     setTileProvider('esri');
@@ -86,6 +91,9 @@ const MapManager = (() => {
     currentTileLayer = L.tileLayer(config.url, config.options);
     currentTileLayer.addTo(map);
 
+    // Garante que o mapa base fique no fundo de todas as sobreposições
+    currentTileLayer.bringToBack();
+
     document.querySelectorAll('.btn-tile-layer').forEach(btn => {
       if (btn.dataset.layer === providerKey) {
         btn.classList.add('btn-tile-active');
@@ -95,6 +103,124 @@ const MapManager = (() => {
         btn.classList.add('btn-tile-inactive');
       }
     });
+  }
+
+  /**
+   * Configura o DESTAQUE DO ESTADO e as DIVISÕES MUNICIPAIS DETALHADAS
+   */
+  function setStateHighlight(stateBorderGeoJson, municipalitiesGeoJson, municipiosMap, onCityClick) {
+    clearStateHighlight();
+    if (!map) return;
+
+    // 1. Camada de Divisões Municipais (linhas finas de todas as cidades do estado)
+    if (municipalitiesGeoJson) {
+      municipalDivisionsLayer = L.geoJSON(municipalitiesGeoJson, {
+        style: () => ({
+          color: '#FFFFFF',
+          weight: 0.9,
+          opacity: 0.7,
+          fillColor: '#4F46E5',
+          fillOpacity: 0.02
+        }),
+        onEachFeature: (feature, layer) => {
+          const codArea = String(feature.properties ? (feature.properties.codarea || '') : '');
+          const nomeCidade = municipiosMap.get(codArea) || 'Município';
+
+          // Tooltip ao passar o mouse
+          layer.bindTooltip(nomeCidade, {
+            permanent: false,
+            direction: 'center',
+            className: 'city-hover-tooltip'
+          });
+
+          // Efeitos de Hover
+          layer.on('mouseover', () => {
+            // Se a cidade já estiver cadastrada com representantes, não sobrepõe estilo
+            if (!cityLayersMap.has(codArea)) {
+              layer.setStyle({
+                color: '#FBBF24',
+                weight: 2.2,
+                opacity: 1,
+                fillColor: '#F59E0B',
+                fillOpacity: 0.28
+              });
+              layer.bringToFront();
+            }
+          });
+
+          layer.on('mouseout', () => {
+            if (!cityLayersMap.has(codArea)) {
+              municipalDivisionsLayer.resetStyle(layer);
+            }
+          });
+
+          // Clique na cidade: seleciona automaticamente no formulário
+          layer.on('click', () => {
+            if (onCityClick && codArea) {
+              onCityClick(codArea);
+            }
+          });
+        }
+      });
+
+      if (showDivisions) {
+        municipalDivisionsLayer.addTo(map);
+      }
+    }
+
+    // 2. Camada de Contorno Externo do Estado (Borda destacada e elegante)
+    if (stateBorderGeoJson) {
+      stateBoundaryLayer = L.geoJSON(stateBorderGeoJson, {
+        style: {
+          color: '#6366F1',       // Indigo destacado
+          weight: 3.5,
+          opacity: 0.95,
+          fill: false,
+          interactive: false
+        }
+      }).addTo(map);
+    }
+
+    // 3. Garante que os municípios já cadastrados fiquem sempre por cima das linhas do estado
+    bringRegisteredCitiesToFront();
+  }
+
+  function clearStateHighlight() {
+    if (stateBoundaryLayer && map) {
+      map.removeLayer(stateBoundaryLayer);
+      stateBoundaryLayer = null;
+    }
+    if (municipalDivisionsLayer && map) {
+      map.removeLayer(municipalDivisionsLayer);
+      municipalDivisionsLayer = null;
+    }
+  }
+
+  function toggleMunicipalDivisions(visible) {
+    showDivisions = visible;
+    if (!map || !municipalDivisionsLayer) return;
+
+    if (showDivisions) {
+      if (!map.hasLayer(municipalDivisionsLayer)) {
+        municipalDivisionsLayer.addTo(map);
+        bringRegisteredCitiesToFront();
+      }
+    } else {
+      if (map.hasLayer(municipalDivisionsLayer)) {
+        map.removeLayer(municipalDivisionsLayer);
+      }
+    }
+  }
+
+  function bringRegisteredCitiesToFront() {
+    cityLayersMap.forEach(entry => {
+      if (entry && entry.layer) {
+        entry.layer.bringToFront();
+      }
+    });
+    if (previewLayer) {
+      previewLayer.bringToFront();
+    }
   }
 
   /**
@@ -110,9 +236,11 @@ const MapManager = (() => {
         weight: 3.5,
         dashArray: '6, 8',
         fillColor: '#FBBF24',
-        fillOpacity: 0.25
+        fillOpacity: 0.28
       }
     }).addTo(map);
+
+    previewLayer.bringToFront();
 
     map.fitBounds(previewLayer.getBounds(), {
       maxZoom: 12,
@@ -127,9 +255,6 @@ const MapManager = (() => {
     }
   }
 
-  /**
-   * Cria ou obtém elemento <defs> no SVG do Leaflet para padrões de listras
-   */
   function getOrCreateSvgDefs() {
     const svg = document.querySelector('#map svg');
     if (!svg) return null;
@@ -141,9 +266,6 @@ const MapManager = (() => {
     return defs;
   }
 
-  /**
-   * Cria padrão listrado SVG com as cores de todas as marcas ativas no município
-   */
   function createStripePattern(municipioId, cores) {
     const defs = getOrCreateSvgDefs();
     if (!defs) return null;
@@ -178,9 +300,6 @@ const MapManager = (() => {
     return `url(#${patternId})`;
   }
 
-  /**
-   * Monta o HTML do Tooltip permanente central com todas as marcas e representantes
-   */
   function buildTooltipHtml(cidadeNome, itensDaCidade) {
     let rowsHtml = '';
     itensDaCidade.forEach(it => {
@@ -209,16 +328,11 @@ const MapManager = (() => {
     `;
   }
 
-  /**
-   * Adiciona ou atualiza a renderização de um município no mapa
-   * Suporta 1 a 6 marcas com coloração única ou listrada!
-   */
   function syncMunicipalityLayer(municipioId, geoJson, itensDaCidade) {
     if (!map) return;
 
     const mIdStr = String(municipioId);
 
-    // Se não há itens para esta cidade, remove a camada do mapa
     if (!itensDaCidade || itensDaCidade.length === 0) {
       if (cityLayersMap.has(mIdStr)) {
         const entry = cityLayersMap.get(mIdStr);
@@ -233,11 +347,10 @@ const MapManager = (() => {
     let entry = cityLayersMap.get(mIdStr);
 
     if (!entry) {
-      // Cria a camada Leaflet
       const layer = L.geoJSON(geoJson, {
         style: {
-          weight: 1.5,
-          color: '#1F2937',
+          weight: 1.8,
+          color: '#111827',
           opacity: 0.95
         }
       });
@@ -246,10 +359,11 @@ const MapManager = (() => {
         layer.setStyle({ weight: 3.5, color: '#FFFFFF' });
       });
       layer.on('mouseout', () => {
-        layer.setStyle({ weight: 1.5, color: '#1F2937' });
+        layer.setStyle({ weight: 1.8, color: '#111827' });
       });
 
       layer.addTo(map);
+      layer.bringToFront();
 
       entry = { layer, geoJson, items: itensDaCidade };
       cityLayersMap.set(mIdStr, entry);
@@ -257,39 +371,37 @@ const MapManager = (() => {
       entry.items = itensDaCidade;
     }
 
-    // Aplica coloração: cor sólida se 1 marca, padrão de listras se 2 a 6 marcas
     const layer = entry.layer;
     if (cores.length === 1) {
       layer.setStyle({
         fillColor: cores[0],
-        fillOpacity: 0.75,
-        weight: 1.5,
-        color: '#1F2937'
+        fillOpacity: 0.78,
+        weight: 1.8,
+        color: '#111827'
       });
       layer.eachLayer(l => {
         if (l._path) {
           l._path.setAttribute('fill', cores[0]);
-          l._path.setAttribute('fill-opacity', '0.75');
+          l._path.setAttribute('fill-opacity', '0.78');
         }
       });
     } else {
       const patternUrl = createStripePattern(mIdStr, cores);
       layer.setStyle({
-        weight: 2,
-        color: '#111827',
-        fillOpacity: 0.9
+        weight: 2.2,
+        color: '#000000',
+        fillOpacity: 0.92
       });
       if (patternUrl) {
         layer.eachLayer(l => {
           if (l._path) {
             l._path.setAttribute('fill', patternUrl);
-            l._path.setAttribute('fill-opacity', '0.9');
+            l._path.setAttribute('fill-opacity', '0.92');
           }
         });
       }
     }
 
-    // Atualiza Tooltip Permanente com todas as marcas
     layer.unbindTooltip();
     layer.bindTooltip(buildTooltipHtml(cidadeNome, itensDaCidade), {
       permanent: true,
@@ -297,27 +409,19 @@ const MapManager = (() => {
       className: 'rep-custom-tooltip'
     });
 
+    layer.bringToFront();
     return entry;
   }
 
-  /**
-   * Remove uma marca ou cidade inteira do mapa
-   */
   function removeMunicipality(municipioId, itensRestantes) {
     syncMunicipalityLayer(municipioId, null, itensRestantes);
   }
 
-  /**
-   * Enquadra a visão no Estado informado
-   */
   function fitToBounds(bounds) {
     if (!map || !bounds) return;
     map.fitBounds(bounds, { padding: [25, 25] });
   }
 
-  /**
-   * Enquadra todos os municípios com marcas cadastradas
-   */
   function fitAllRegisteredCities() {
     if (!map || cityLayersMap.size === 0) return;
     const allLayers = [];
@@ -359,9 +463,6 @@ const MapManager = (() => {
     return isFullscreen;
   }
 
-  /**
-   * Tira print do mapa em Alta Resolução (Scale: 2) usando dom-to-image
-   */
   async function captureMapScreenshot() {
     const mapElement = document.getElementById('map');
     if (!mapElement) throw new Error('Elemento do mapa não encontrado');
@@ -413,6 +514,9 @@ const MapManager = (() => {
   return {
     init,
     setTileProvider,
+    setStateHighlight,
+    clearStateHighlight,
+    toggleMunicipalDivisions,
     showPreview,
     clearPreview,
     syncMunicipalityLayer,

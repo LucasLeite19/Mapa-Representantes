@@ -1,18 +1,16 @@
 /**
  * MÓDULO PRINCIPAL: APP CONTROLLER
  * Coordena interface, eventos, regras de negócio e sincronização entre mapa e tabela.
- * Suporta até 6 marcas distintas por município (cada município pode ter de 1 a 6 representantes).
- * 100% volátil em memória (sem localStorage).
+ * Suporta destaque visual do Estado, detalhamento cartográfico de todas as cidades com clique direto no mapa,
+ * e até 6 marcas por município. 100% volátil em memória.
  */
 
 const App = (() => {
-  // Estado Global da Aplicação em Memória
   const state = {
     estados: [],
     municipiosAtuais: [],
     estadoSelecionado: null,
     estadoBounds: null,
-    // Configuração das marcas (até 6 marcas)
     marcas: [
       { id: 1, nome: 'Marca 1' },
       { id: 2, nome: 'Marca 2' },
@@ -47,10 +45,8 @@ const App = (() => {
     const select = document.getElementById('selectMarca');
     if (!select) return;
 
-    const valorAtual = select.value;
     select.innerHTML = '';
 
-    // Marcas já ocupadas no município atual
     const marcasOcupadas = new Set();
     if (municipioId) {
       state.itensCadastrados
@@ -72,7 +68,6 @@ const App = (() => {
       select.appendChild(opt);
     });
 
-    // Seleciona a primeira marca disponível
     const primeiraDisponivel = Array.from(select.options).find(opt => !opt.disabled);
     if (primeiraDisponivel) {
       select.value = primeiraDisponivel.value;
@@ -93,7 +88,15 @@ const App = (() => {
       onMunicipioChange(e.target.value);
     });
 
-    // Campo de Representante: se já existir, puxa a cor automaticamente
+    // Checkbox para ligar/desligar visualização das divisões municipais
+    const checkDivisoes = document.getElementById('checkDivisoesCidades');
+    if (checkDivisoes) {
+      checkDivisoes.addEventListener('change', (e) => {
+        MapManager.toggleMunicipalDivisions(e.target.checked);
+      });
+    }
+
+    // Campo de Representante: auto preenche cor existente
     const inputRep = document.getElementById('inputRepresentante');
     inputRep.addEventListener('input', () => {
       const nomeDigitado = inputRep.value.trim().toLowerCase();
@@ -230,7 +233,6 @@ const App = (() => {
 
     if (btnGerenciarMarcas && modalMarcas) {
       btnGerenciarMarcas.addEventListener('click', () => {
-        // Preenche os campos do modal com os nomes atuais
         state.marcas.forEach(m => {
           const inp = document.getElementById(`inputNomeMarca${m.id}`);
           if (inp) inp.value = m.nome;
@@ -250,13 +252,11 @@ const App = (() => {
           }
         });
 
-        // Atualiza registros existentes que usavam essa marca
         state.itensCadastrados.forEach(it => {
           const marcaObj = state.marcas.find(m => m.id === Number(it.marcaId));
           if (marcaObj) it.marcaNome = marcaObj.nome;
         });
 
-        // Atualiza camadas do mapa e tabela
         const cidadesUnicas = new Set(state.itensCadastrados.map(it => String(it.municipioId)));
         cidadesUnicas.forEach(mId => {
           const itensDaCidade = state.itensCadastrados.filter(it => String(it.municipioId) === mId);
@@ -298,7 +298,10 @@ const App = (() => {
   }
 
   /**
-   * Ação ao trocar o Estado selecionado
+   * Ação ao trocar o Estado selecionado:
+   * 1. Enquadra o mapa no Estado.
+   * 2. Destaca as fronteiras externas do Estado.
+   * 3. Carrega e exibe a divisão detalhada de todos os municípios com clique e hover.
    */
   async function onEstadoChange(estadoId) {
     const selectMunicipio = document.getElementById('selectMunicipio');
@@ -306,6 +309,7 @@ const App = (() => {
     const infoModelo = document.getElementById('infoModeloEstado');
 
     MapManager.clearPreview();
+    MapManager.clearStateHighlight();
     state.previewGeoJson = null;
 
     if (!estadoId) {
@@ -325,6 +329,7 @@ const App = (() => {
     state.estadoSelecionado = uf;
     infoModelo.textContent = `Estado Selecionado: ${uf.nome} (${uf.sigla})`;
 
+    // Enquadramento imediato via Bounding Box pré-computada
     const bounds = IBGEService.getEstadoBounds(uf.sigla);
     if (bounds) {
       state.estadoBounds = bounds;
@@ -333,31 +338,58 @@ const App = (() => {
 
     selectMunicipio.disabled = true;
     selectMunicipio.innerHTML = '<option value="">Carregando municípios...</option>';
-    labelTotal.textContent = 'Buscando...';
+    labelTotal.textContent = 'Carregando malhas...';
 
     try {
+      // 1. Carrega lista tabular dos municípios
       const municipios = await IBGEService.getMunicipios(uf.id);
       state.municipiosAtuais = municipios;
       atualizarSelectMunicipios();
       labelTotal.textContent = `${municipios.length} municípios`;
+
+      // Cria mapa de lookup rápido: codarea (ID IBGE 7 dígitos) -> Nome
+      const municipiosMap = new Map();
+      municipios.forEach(m => municipiosMap.set(String(m.id), m.nome));
+
+      // 2. Carrega simultaneamente a malha externa do Estado e as divisões municipais detalhadas
+      const [malhaEstado, malhaMunicipios] = await Promise.all([
+        IBGEService.getMalhaEstado(uf.sigla).catch(e => {
+          console.warn('Falha contorno estado:', e);
+          return null;
+        }),
+        IBGEService.getMalhaMunicipiosEstado(uf.sigla).catch(e => {
+          console.warn('Falha divisão municípios:', e);
+          return null;
+        })
+      ]);
+
+      // 3. Aplica o destaque no mapa com suporte ao clique direto na cidade
+      MapManager.setStateHighlight(malhaEstado, malhaMunicipios, municipiosMap, (clickedMunicipioId) => {
+        // Ao clicar em uma cidade no mapa, seleciona automaticamente no <select>
+        if (selectMunicipio && clickedMunicipioId) {
+          selectMunicipio.value = clickedMunicipioId;
+          onMunicipioChange(clickedMunicipioId);
+          showToast(`Cidade selecionada no mapa!`, 'info');
+        }
+      });
+
     } catch (err) {
       console.error(err);
       selectMunicipio.innerHTML = '<option value="">Erro ao carregar municípios</option>';
-      showToast('Falha ao carregar municípios do IBGE.', 'error');
+      showToast('Falha ao carregar dados do IBGE para o estado.', 'error');
     } finally {
       selectMunicipio.disabled = false;
     }
   }
 
   /**
-   * Atualiza as opções do <select id="selectMunicipio"> exibindo o status de marcas (ex: 2/6 marcas)
+   * Atualiza as opções do <select id="selectMunicipio">
    */
   function atualizarSelectMunicipios() {
     const select = document.getElementById('selectMunicipio');
     const valorAnterior = select.value;
-    select.innerHTML = '<option value="">Selecione um Município...</option>';
+    select.innerHTML = '<option value="">Selecione um Município ou clique no mapa...</option>';
 
-    // Mapa de contagem de marcas cadastradas por município
     const contagemPorCidade = new Map();
     state.itensCadastrados.forEach(it => {
       const key = String(it.municipioId);
@@ -439,7 +471,7 @@ const App = (() => {
       return;
     }
     if (!municipioId) {
-      showToast('Selecione um Município.', 'warning');
+      showToast('Selecione um Município ou clique diretamente no mapa.', 'warning');
       return;
     }
     if (!marcaId) {
@@ -452,7 +484,6 @@ const App = (() => {
       return;
     }
 
-    // Verificar se a marca já está ocupada nesta cidade
     const marcaJaExiste = state.itensCadastrados.some(
       it => String(it.municipioId) === String(municipioId) && Number(it.marcaId) === marcaId
     );
@@ -461,7 +492,6 @@ const App = (() => {
       return;
     }
 
-    // Verificar limite máximo de 6 marcas para esta cidade
     const totalNestaCidade = state.itensCadastrados.filter(
       it => String(it.municipioId) === String(municipioId)
     ).length;
@@ -476,7 +506,6 @@ const App = (() => {
     const municipioNome = optMun.dataset.nome || optMun.textContent.split(' (')[0].trim();
     const marcaNome = optMarca.dataset.nome || optMarca.textContent.split(' (')[0].trim();
 
-    // Obter malha geográfica
     let geoJson = state.previewGeoJson;
     if (!geoJson) {
       try {
@@ -490,7 +519,6 @@ const App = (() => {
     MapManager.clearPreview();
     state.previewGeoJson = null;
 
-    // Sincroniza cor do representante em todos os seus registros caso tenha mudado
     sincronizarCorRepresentante(nome, cor);
 
     const seqId = state.nextSeqId++;
@@ -509,24 +537,19 @@ const App = (() => {
       geoJson: geoJson
     };
 
-    // Adiciona na memória (mais recentes primeiro)
     state.itensCadastrados.unshift(item);
 
-    // Atualiza a renderização da cidade no mapa com suporte a múltiplas marcas
     const itensDestaCidade = state.itensCadastrados.filter(it => String(it.municipioId) === String(municipioId));
     MapManager.syncMunicipalityLayer(municipioId, geoJson, itensDestaCidade);
 
-    // Atualiza interface
     atualizarSelectMunicipios();
     renderTabela();
     atualizarMetricas();
 
-    // Resetar campos
     selectMunicipio.value = '';
     renderSelectMarcas(null);
     setCorAtual(getRandomColor());
 
-    // Retorna o zoom do mapa para abranger o Estado
     if (state.estadoBounds) {
       MapManager.fitToBounds(state.estadoBounds);
     }
@@ -534,9 +557,6 @@ const App = (() => {
     showToast(`${municipioNome} cadastrado na ${marcaNome} com sucesso (Nº ${seqId})!`, 'success');
   }
 
-  /**
-   * Sincroniza cor de um representante em todos os registros anteriores
-   */
   function sincronizarCorRepresentante(nomeRep, novaCor) {
     const nomeLower = nomeRep.trim().toLowerCase();
     let atualizados = 0;
@@ -559,9 +579,6 @@ const App = (() => {
     }
   }
 
-  /**
-   * Renderiza a Tabela Inferior de Registros com a coluna Marca
-   */
   function renderTabela() {
     const tbody = document.getElementById('tabelaCorpo');
     const badgeCount = document.getElementById('badgeTableCount');
@@ -660,7 +677,7 @@ const App = (() => {
             map.fitBounds(entry.layer.getBounds(), { maxZoom: 12, padding: [50, 50] });
             entry.layer.setStyle({ weight: 4, color: '#FFFFFF' });
             setTimeout(() => {
-              if (entry.layer) entry.layer.setStyle({ weight: 1.5, color: '#1F2937' });
+              if (entry.layer) entry.layer.setStyle({ weight: 1.8, color: '#111827' });
             }, 1800);
           }
         }
@@ -668,9 +685,6 @@ const App = (() => {
     });
   }
 
-  /**
-   * Remover um item cadastrado
-   */
   function removerItem(id) {
     const index = state.itensCadastrados.findIndex(it => it.id === id);
     if (index === -1) return;
@@ -678,14 +692,11 @@ const App = (() => {
     const item = state.itensCadastrados[index];
     const mId = String(item.municipioId);
 
-    // Remove do array em memória
     state.itensCadastrados.splice(index, 1);
 
-    // Atualiza a camada do mapa com os itens restantes daquela cidade
     const itensRestantesDaCidade = state.itensCadastrados.filter(it => String(it.municipioId) === mId);
     MapManager.syncMunicipalityLayer(mId, null, itensRestantesDaCidade);
 
-    // Atualiza seletores e tabela
     atualizarSelectMunicipios();
     renderTabela();
     atualizarMetricas();
@@ -701,9 +712,6 @@ const App = (() => {
     document.getElementById('metricTotalReps').textContent = reps;
   }
 
-  /**
-   * Baixar Planilha Modelo
-   */
   function baixarPlanilhaModelo() {
     if (!state.estadoSelecionado) {
       showToast('Selecione primeiro um Estado para gerar a planilha modelo.', 'warning');
@@ -726,9 +734,6 @@ const App = (() => {
     }
   }
 
-  /**
-   * Processar Planilha Subida pelo Usuário
-   */
   async function processarPlanilhaUpload(file) {
     if (!file.name.match(/\.(xlsx|xls)$/i)) {
       showToast('Selecione um arquivo Excel (.xlsx ou .xls).', 'error');
@@ -748,9 +753,6 @@ const App = (() => {
     }
   }
 
-  /**
-   * Executa a Importação em Massa com suporte a Marca (até 6 marcas por município)
-   */
   async function executarImportacaoEmLote(rows) {
     const modal = document.getElementById('modalProgresso');
     const txtProgresso = document.getElementById('modalProgressoTexto');
@@ -784,20 +786,17 @@ const App = (() => {
         let corHex = String(row['Cor Hex'] || row['Cor'] || row['cor'] || '').trim().toUpperCase();
 
         try {
-          // Identificar ou atribuir a marca
           let marcaObj = null;
           if (nomeMarca) {
             marcaObj = state.marcas.find(m => m.nome.toLowerCase() === nomeMarca.toLowerCase());
           }
           if (!marcaObj) {
-            // Se marca não especificada, procura a primeira marca ainda livre para esta cidade
             const marcasUsadas = new Set(
               state.itensCadastrados.filter(it => String(it.municipioId) === idIbge).map(it => it.marcaId)
             );
             marcaObj = state.marcas.find(m => !marcasUsadas.has(m.id)) || state.marcas[0];
           }
 
-          // Se a marca já está ocupada nesta cidade, remove o anterior para sobrescrever
           const idxAntigo = state.itensCadastrados.findIndex(
             it => String(it.municipioId) === idIbge && it.marcaId === marcaObj.id
           );
@@ -805,13 +804,11 @@ const App = (() => {
             state.itensCadastrados.splice(idxAntigo, 1);
           }
 
-          // Verificar limite de 6 marcas
           const qtdAtual = state.itensCadastrados.filter(it => String(it.municipioId) === idIbge).length;
           if (qtdAtual >= 6) {
-            return; // Limite atingido
+            return;
           }
 
-          // Cor do representante
           const repKey = nomeRep.toLowerCase();
           if (!corHex || !/^#[0-9A-F]{6}$/i.test(corHex)) {
             if (coresReps.has(repKey)) {
@@ -825,7 +822,6 @@ const App = (() => {
             sincronizarCorRepresentante(nomeRep, corHex);
           }
 
-          // Buscar GeoJSON
           const geoJson = await IBGEService.getMalhaMunicipio(idIbge);
           if (!geoJson) throw new Error('Malha vazia');
 
@@ -862,7 +858,6 @@ const App = (() => {
       }));
     }
 
-    // Sincroniza todas as camadas de municípios afetados no mapa
     cidadesModificadas.forEach(mId => {
       const itensDaCidade = state.itensCadastrados.filter(it => String(it.municipioId) === mId);
       const geoJson = itensDaCidade[0] ? itensDaCidade[0].geoJson : null;
@@ -882,9 +877,6 @@ const App = (() => {
     showToast(`Importação concluída! ${adicionados} adicionados com sucesso${erros > 0 ? `, ${erros} com falha` : ''}.`, adicionados > 0 ? 'success' : 'warning');
   }
 
-  /**
-   * Baixar Pacote Final (.zip): Imagem em Alta Resolução + Planilha ExcelJS
-   */
   async function baixarPacoteFinal() {
     if (state.isExporting) return;
 

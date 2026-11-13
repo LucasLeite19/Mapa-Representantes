@@ -1,7 +1,7 @@
 /**
  * MÓDULO: IBGE SERVICE
  * Responsável por todas as consultas à API de Localidades e Malhas do IBGE,
- * incluindo cache de requisições e coordenadas limites (bounding boxes) dos 27 estados.
+ * incluindo cache de requisições, malhas de municípios integradas e coordenadas limites (bounding boxes).
  */
 
 const IBGEService = (() => {
@@ -9,7 +9,6 @@ const IBGEService = (() => {
   const geoCache = new Map();
 
   // Bounding Boxes [ [minLat, minLng], [maxLat, maxLng] ] de todos os 27 estados do Brasil
-  // Garante que o zoom no Estado seja instantâneo e não dependa do download de malhas pesadas
   const UF_BOUNDS = {
     AC: [[-11.145, -73.990], [-7.111, -66.623]],
     AL: [[-10.504, -38.237], [-8.813, -35.152]],
@@ -77,7 +76,40 @@ const IBGEService = (() => {
   }
 
   /**
-   * Retorna os limites (LatLngBounds) pré-computados para um Estado pela sigla (ex: 'SP')
+   * Obtém o contorno geral do Estado (fronteira externa)
+   */
+  async function getMalhaEstado(ufSiglaOuId) {
+    const key = `UF_BORDER_${ufSiglaOuId}`;
+    if (geoCache.has(key)) {
+      return geoCache.get(key);
+    }
+    const url = `https://servicodados.ibge.gov.br/api/v3/malhas/estados/${ufSiglaOuId}?formato=application/vnd.geo+json&qualidade=minima`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`Falha ao obter contorno do estado ${ufSiglaOuId}: HTTP ${res.status}`);
+    const data = await res.json();
+    geoCache.set(key, data);
+    return data;
+  }
+
+  /**
+   * Obtém todas as divisões municipais internas do Estado (todos os municípios em uma única chamada rápida)
+   * API IBGE: /api/v3/malhas/estados/{UF}?intrarregiao=municipio&formato=application/vnd.geo+json&qualidade=minima
+   */
+  async function getMalhaMunicipiosEstado(ufSiglaOuId) {
+    const key = `UF_MUNICIPIOS_${ufSiglaOuId}`;
+    if (geoCache.has(key)) {
+      return geoCache.get(key);
+    }
+    const url = `https://servicodados.ibge.gov.br/api/v3/malhas/estados/${ufSiglaOuId}?intrarregiao=municipio&formato=application/vnd.geo+json&qualidade=minima`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`Falha ao obter malha dos municípios do estado ${ufSiglaOuId}: HTTP ${res.status}`);
+    const data = await res.json();
+    geoCache.set(key, data);
+    return data;
+  }
+
+  /**
+   * Retorna os limites pré-computados para um Estado pela sigla (ex: 'SP')
    */
   function getEstadoBounds(sigla) {
     if (!sigla) return null;
@@ -89,6 +121,8 @@ const IBGEService = (() => {
     getEstados,
     getMunicipios,
     getMalhaMunicipio,
+    getMalhaEstado,
+    getMalhaMunicipiosEstado,
     getEstadoBounds
   };
 })();

@@ -42,7 +42,7 @@
   border: none !important;
 }
 
-/* Rótulos e Tooltips Permanentes no Centro do Município */
+/* Rótulos e Tooltips Permanentes no Centro do Município Cadastrado */
 .rep-custom-tooltip {
   background: rgba(17, 24, 39, 0.95) !important;
   border: 1px solid rgba(255, 255, 255, 0.4) !important;
@@ -99,6 +99,22 @@
 .brand-4 { background-color: #f59e0b; color: #111827 !important; } /* Âmbar */
 .brand-5 { background-color: #8b5cf6; } /* Roxo */
 .brand-6 { background-color: #ec4899; } /* Rosa */
+
+/* Tooltip leve ao passar o mouse sobre divisões municipais */
+.city-hover-tooltip {
+  background: rgba(15, 23, 42, 0.9) !important;
+  border: 1px solid rgba(99, 102, 241, 0.5) !important;
+  border-radius: 6px !important;
+  padding: 2px 8px !important;
+  color: #ffffff !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4) !important;
+  pointer-events: none !important;
+}
+.city-hover-tooltip::before {
+  display: none !important;
+}
 
 /* Controles de camadas ativas */
 .btn-tile-active {
